@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Klook Search and Navigation</title>
+<link rel="icon" href="https://res.klook.com/image/upload/v1630595837/new_admin_layout/module_icons/team_hotel_ill.svg" type="image/svg+xml">
+<style>
+    body {
+        font-family: 'Roboto', Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #E3F2FD 0%, #ffffff 100%);
+        background-size: cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+    }
+    .wrapper {
+        text-align: center;
+        padding: 20px;
+        background-color: rgba(255,255,255,0.5);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+    }
+    .search-container {
+        margin-bottom: 50px;
+    }
+    .search-box input[type="text"] {
+        padding: 10px 10px 10px 40px;
+        width: calc(100% - 40px); /* Adjust width to work with icon */
+        height: 36px; /* Match Google's height */
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        font-size: 16px; /* Match Google's font size */
+        background: url('https://s1.aigei.com/src/img/png/b0/b063960f582b4a78a4456f386583405b.png?imageMogr2/auto-orient/thumbnail/!282x282r/gravity/Center/crop/282x282/quality/85/%7CimageView2/2/w/282&e=1735488000&token=P7S2Xpzfz11vAkASLTkfHN7Fw-oOZBecqeJaxypL:r0m8C5o82t2CKJc6f81m8e6Dp0Y=') no-repeat 10px center / 20px 20px, #FFF;
+        transition: all 0.3s ease;
+    }
+    .search-box input[type="text"]:focus {
+        box-shadow: 0 0 8px 0 rgba(0,0,0,0.2);
+    }
+    .input-container, .button-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .input-container input[type="text"], .button-container button {
+        width: calc(33.333% - 20px); /* Adjust for 3 items per row with gap */
+    }
+    .input-container input[type="text"] {
+        padding: 10px;
+        height: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        border-radius: 15px;
+        background-color: #ffffffc5;
+    }
+    button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="search-container search-box">
+        <input type="text" id="searchInput" placeholder="输入关键词搜索..." onkeypress="searchKeyPress(event)">
+    </div>
+
+    <div class="input-container">
+        <input type="text" id="aidInput" placeholder="AID" oninput="validateAndMoveInput(this, ['pidInput', 'skuIdInput'])">
+        <input type="text" id="pidInput" placeholder="PID" oninput="validateAndMoveInput(this, ['skuIdInput'])">
+        <input type="text" id="skuIdInput" placeholder="SKU ID" oninput="validateInput(this)">
+    </div>
+
+    <div class="button-container">
+        <button onclick="gotoAMPPage()">AMP商品页</button>
+        <button onclick="gotoBookingPage()">预定页</button>
+        <button onclick="gotoPricePage()">价格页</button>
+    </div>
+</div>
+
+<script>
+    function search() {
+        var keyword = document.getElementById("searchInput").value;
+        window.location.href = `https://klook.klktech.com/zh-CN/search?keyword=${encodeURIComponent(keyword)}`;
+    }
+    
+    function searchKeyPress(event) {
+        if (event.key === "Enter") {
+            search();
+        }
+    }
+    
+    function validateAndMoveInput(input, nextInputIds) {
+        let parts = input.value.split(/\s+/);
+        if (parts.length > 1) {
+            input.value = parts[0].replace(/\D/g, ''); // Keep only digits in the current input
+            parts.slice(1).forEach((part, index) => {
+                if (index < nextInputIds.length) {
+                    let nextInput = document.getElementById(nextInputIds[index]);
+                    nextInput.value = part.replace(/\D/g, ''); // Fill the next inputs with digits only
+                }
+            });
+        } else {
+            input.value = input.value.replace(/\D/g, ''); // If no spaces, just keep digits
+        }
+        // Handle enter key press to focus on the first button
+        input.addEventListener('keydown', function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // Prevent default Enter key behavior
+                document.querySelector('.button-container button').focus(); // Focus on the first button
+            }
+        });
+    }
+    
+    function validateInput(input) {
+        input.value = input.value.replace(/\D/g, '');
+        // Similar behavior for SKU ID input
+        input.addEventListener('keydown', function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                document.querySelector('.button-container button').focus();
+            }
+        });
+    }
+    
+    document.querySelectorAll('.button-container button').forEach((button, index, buttons) => {
+        button.addEventListener('keydown', function(e) {
+            if (e.key === "ArrowRight") {
+                e.preventDefault(); // Prevent default arrow key behavior
+                // Focus on the next button, or loop back to the first button
+                buttons[(index + 1) % buttons.length].focus();
+            } else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                // Focus on the previous button, or loop back to the last button
+                buttons[(index - 1 + buttons.length) % buttons.length].focus();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                button.click(); // Trigger the button click
+            }
+        });
+    });
+    
+    function gotoAMPPage() {
+        var aid = document.getElementById("aidInput").value;
+        if (aid) {
+            window.location.href = `https://klook.klktech.com/zh-CN/activity/${aid}`;
+        } else {
+            alert("请输入AID");
+        }
+    }
+    
+    function gotoBookingPage() {
+        var pid = document.getElementById("pidInput").value;
+        var skuId = document.getElementById("skuIdInput").value;
+        if (pid && skuId) {
+            window.location.href = `https://klook.klktech.com/zh-CN/pay_ticket/${pid}/${skuId}`;
+        } else {
+            alert("请输入PID和SKU ID");
+        }
+    }
+    
+    function gotoPricePage() {
+        var aid = document.getElementById("aidInput").value;
+        var pid = document.getElementById("pidInput").value;
+        if (aid && !pid) {
+            window.location.href = `https://admin.klook.com/act/activity/basic/${aid}?edit_status=1&is_am=true&ref=&lang=zh_CN`;
+        } else if (aid && pid) {
+            window.location.href = `https://admin.klook.com/mspa/experiencesadmincommon/act/package/schedule/${aid}?iframe=true&edit_status=1&ref=&lang=zh_CN&page_from=admin&package_type=-1&package_id=${pid}`;
+        } else {
+            alert("请至少输入AID");
+        }
+    }
+    </script>
+    
+
+</body>
+</html>
