@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirect to Custom URL</title>
+    <script type="text/javascript">
+        function redirectToCustomURL() {
+            var aidInput = document.getElementById("aidField").value;
+            var pidInput = document.getElementById("pidField").value;
+
+            if (aidInput && pidInput) {
+                // 同时输入AID和PID的情况
+                var baseUrl = "https://admin.klook.com/mspa/experiencesadmincommon/act/package/schedule/";
+                var fullUrl = baseUrl + aidInput + "?iframe=true&edit_status=1&ref=&lang=zh_CN&page_from=admin&package_type=1&package_id=" + pidInput;
+                window.location.href = fullUrl;
+            } else if (aidInput) {
+                // 只输入AID的情况
+                var baseUrl = "https://admin.klook.com/act/activity/basic/";
+                var fullUrl = baseUrl + aidInput + "?edit_status=1&is_am=true&ref=&lang=zh_CN";
+                window.location.href = fullUrl;
+            } else if (pidInput) {
+                // 只输入PID的情况
+                alert("请输入AID和PID一起使用，或者只输入AID。");
+            } else {
+                alert("请输入AID或者PID。");
+            }
+            return false; // 阻止表单的默认提交行为
+        }
+    </script>
+    <link rel="icon" href="https://res.klook.com/image/upload/v1630595837/new_admin_layout/module_icons/team_demand_ill.svg" type="image/svg+xml">
+
+</head>
+<body onload="document.getElementById('aidField').focus();">
+    <form onsubmit="return redirectToCustomURL()">
+        <label for="aidField">请输入AID:</label>
+        <input type="text" id="aidField" placeholder="只输入AID跳转到活动页">
+        <br>
+        <label for="pidField">请输入PID:</label>
+        <input type="text" id="pidField" placeholder="全部输入跳转到套餐价格页">
+        <br>
+        <input type="submit" value="Go">
+    </form>
+</body>
+</html>
