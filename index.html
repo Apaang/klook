@@ -1,43 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>Redirect to Custom URL</title>
-    <script type="text/javascript">
-        function redirectToCustomURL() {
-            var aidInput = document.getElementById("aidField").value;
-            var pidInput = document.getElementById("pidField").value;
-
-            if (aidInput && pidInput) {
-                // 同时输入AID和PID的情况
-                var baseUrl = "https://admin.klook.com/mspa/experiencesadmincommon/act/package/schedule/";
-                var fullUrl = baseUrl + aidInput + "?iframe=true&edit_status=1&ref=&lang=zh_CN&page_from=admin&package_type=1&package_id=" + pidInput;
-                window.location.href = fullUrl;
-            } else if (aidInput) {
-                // 只输入AID的情况
-                var baseUrl = "https://admin.klook.com/act/activity/basic/";
-                var fullUrl = baseUrl + aidInput + "?edit_status=1&is_am=true&ref=&lang=zh_CN";
-                window.location.href = fullUrl;
-            } else if (pidInput) {
-                // 只输入PID的情况
-                alert("请输入AID和PID一起使用，或者只输入AID。");
-            } else {
-                alert("请输入AID或者PID。");
-            }
-            return false; // 阻止表单的默认提交行为
-        }
-    </script>
-    <link rel="icon" href="https://res.klook.com/image/upload/v1630595837/new_admin_layout/module_icons/team_demand_ill.svg" type="image/svg+xml">
-
+<meta charset="UTF-8">
+<title>Klook Search and Navigation</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+    }
+    .search-container,
+    .input-container,
+    .button-container {
+        margin-bottom: 20px;
+    }
+    .search-box input[type="text"] {
+        padding: 10px;
+        width: 600px;
+        height: 50px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    .input-container input[type="text"] {
+        padding: 10px;
+        margin-bottom: 10px;
+        width: 200px;
+        height: 40px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
 </head>
-<body onload="document.getElementById('aidField').focus();">
-    <form onsubmit="return redirectToCustomURL()">
-        <label for="aidField">请输入AID:</label>
-        <input type="text" id="aidField" placeholder="只输入AID跳转到活动页">
-        <br>
-        <label for="pidField">请输入PID:</label>
-        <input type="text" id="pidField" placeholder="全部输入跳转到套餐价格页">
-        <br>
-        <input type="submit" value="Go">
-    </form>
+<body>
+
+<div class="search-container">
+    <input type="text" id="searchInput" placeholder="输入关键词搜索..." onkeypress="searchKeyPress(event)">
+</div>
+
+<div class="input-container">
+    <input type="text" id="aidInput" placeholder="AID" oninput="validateAndMoveInput(this, ['pidInput', 'skuIdInput'])">
+    <input type="text" id="pidInput" placeholder="PID" oninput="validateAndMoveInput(this, ['skuIdInput'])">
+    <input type="text" id="skuIdInput" placeholder="SKU ID" oninput="validateInput(this)">
+</div>
+
+<div class="button-container">
+    <button onclick="gotoAMPPage()">AMP商品页</button>
+    <button onclick="gotoBookingPage()">预定页</button>
+    <button onclick="gotoPricePage()">价格页</button>
+</div>
+
+<script>
+function search() {
+    var keyword = document.getElementById("searchInput").value;
+    window.location.href = `https://klook.klktech.com/zh-CN/search?keyword=${encodeURIComponent(keyword)}`;
+}
+
+function searchKeyPress(event) {
+    if (event.key === "Enter") {
+        search();
+    }
+}
+
+function validateAndMoveInput(input, nextInputIds) {
+    let parts = input.value.split(/\s+/);
+    if (parts.length > 1) {
+        input.value = parts[0].replace(/\D/g, ''); // Keep only digits in the current input
+        parts.slice(1).forEach((part, index) => {
+            if (index < nextInputIds.length) {
+                let nextInput = document.getElementById(nextInputIds[index]);
+                nextInput.value = part.replace(/\D/g, ''); // Fill the next inputs with digits only
+            }
+        });
+    } else {
+        input.value = input.value.replace(/\D/g, ''); // If no spaces, just keep digits
+    }
+}
+
+function validateInput(input) {
+    input.value = input.value.replace(/\D/g, '');
+}
+
+function gotoAMPPage() {
+    var aid = document.getElementById("aidInput").value;
+    if (aid) {
+        window.location.href = `https://klook.klktech.com/zh-CN/activity/${aid}`;
+    } else {
+        alert("请输入AID");
+    }
+}
+
+function gotoBookingPage() {
+    var pid = document.getElementById("pidInput").value;
+    var skuId = document.getElementById("skuIdInput").value;
+    if (pid && skuId) {
+        window.location.href = `https://klook.klktech.com/zh-CN/pay_ticket/${pid}/${skuId}`;
+    } else {
+        alert("请输入PID和SKU ID");
+    }
+}
+
+function gotoPricePage() {
+    var aid = document.getElementById("aidInput").value;
+    var pid = document.getElementById("pidInput").value;
+    if (aid && !pid) {
+        window.location.href = `https://admin.klook.com/act/activity/basic/${aid}?edit_status=1&is_am=true&ref=&lang=zh_CN`;
+    } else if (aid && pid) {
+        window.location.href = `https://admin.klook.com/mspa/experiencesadmincommon/act/package/schedule/${aid}?iframe=true&edit_status=1&ref=&lang=zh_CN&page_from=admin&package_type=-1&package_id=${pid}`;
+    } else {
+        alert("请至少输入AID");
+    }
+}
+</script>
+
 </body>
 </html>
