@@ -82,12 +82,12 @@
     }
     .search-box input[type="text"] {
         padding: 10px 10px 10px 40px;
-        width: calc(60% - 40px); /* 调整宽度以适应图标 */
+        width: calc(50% - 40px); /* 调整宽度以适应图标 */
         height: 36px; /* 与Google的高度相匹配 */
         border: 1px solid #ccc;
         border-radius: 20px;
         font-size: 16px; /* 与Google的字号相匹配 */
-        background: url('images/Magnifier.svg') no-repeat 10px center / 20px 20px, #FFF;
+        background:  #FFF;
         transition: all 0.3s ease;
     }
     .search-box input[type="text"]:focus {
@@ -198,7 +198,10 @@
 
 <div class="wrapper">
     <div class="search-container search-box">
-        <input type="text" id="searchInput" placeholder="输入关键词搜索..." onkeypress="searchKeyPress(event)">
+        <input type="text" id="searchInput" placeholder="输入关键词搜索AMP商品..." onkeypress="searchKeyPress(event)">
+        <img src="images/Magnifier.svg" alt="搜索" id="searchIcon" style="cursor: pointer; transform: translateY(40%);width: 40px; height: 40px;" onclick="search()">
+
+
     </div>
 
     <div class="input-container">
