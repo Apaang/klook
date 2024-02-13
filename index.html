@@ -12,30 +12,82 @@
         background: linear-gradient(135deg, #E3F2FD 0%, #ffffff 100%);
         background-size: cover;
         display: flex;
-        justify-content: center;
+        flex-direction: column; /* 改为列布局 */
         align-items: center;
-        height: 100vh;
+        min-height: 100vh;
         background-attachment: fixed;
         background-repeat: no-repeat;
     }
+    .shortcut-icons-container {
+        width: 800px; /* 设置宽度 */
+        display: flex;
+        justify-content: center;
+        padding: 20px 0;
+        margin-top: 50px; /* 与顶部的距离 */
+        background-color: rgba(255,255,255,0.5); /* 可选：添加背景色 */
+        border-radius: 10px; /* 可选：圆角 */
+        backdrop-filter: blur(10px); /* 可选：模糊效果 */
+    }
+    .shortcut-icons {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 40px;
+        max-width: 800px; /* 限制最大宽度来控制每行图标数量 */
+    }
+    /* 媒体查询示例 */
+    @media (max-width: 1200px) {
+        .shortcut-icons {
+            max-width: 1000px; /* 调整为更小的宽度以适应屏幕尺寸 */
+        }
+    }
+    .break {
+        flex-basis: 100%; /* 强制换行 */
+        height: 0; /* 保持元素高度为0，不影响布局 */
+    }
+    .icon-box {
+        width: 100px;
+        height: 100px;
+        background-color: #ffffff;
+        border-radius: 15px;
+        transition: background-color 0.3s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer; /* 明确表示可点击 */
+    }
+    .icon-box:hover {
+        background-color: #E8F5FE;
+    }
+    .icon-box img {
+        width: 60px;
+        height: 60px;
+    }
+    .icon-label {
+        font-size: 15px;
+        margin-top: 5px; /* 调整图标和文字之间的间距 */
+        text-align: center; /* 确保文字居中 */
+    }
     .wrapper {
+        width: 50%; /* 调整主体宽度 */
         text-align: center;
         padding: 20px;
         background-color: rgba(255,255,255,0.5);
         border-radius: 10px;
         backdrop-filter: blur(10px);
+        margin-top: 50px; /* 确保元素之间有空间 */
     }
     .search-container {
         margin-bottom: 50px;
     }
     .search-box input[type="text"] {
         padding: 10px 10px 10px 40px;
-        width: calc(100% - 40px); /* Adjust width to work with icon */
-        height: 36px; /* Match Google's height */
+        width: calc(60% - 40px); /* 调整宽度以适应图标 */
+        height: 36px; /* 与Google的高度相匹配 */
         border: 1px solid #ccc;
         border-radius: 20px;
-        font-size: 16px; /* Match Google's font size */
-        background: url('https://s1.aigei.com/src/img/png/b0/b063960f582b4a78a4456f386583405b.png?imageMogr2/auto-orient/thumbnail/!282x282r/gravity/Center/crop/282x282/quality/85/%7CimageView2/2/w/282&e=1735488000&token=P7S2Xpzfz11vAkASLTkfHN7Fw-oOZBecqeJaxypL:r0m8C5o82t2CKJc6f81m8e6Dp0Y=') no-repeat 10px center / 20px 20px, #FFF;
+        font-size: 16px; /* 与Google的字号相匹配 */
+        background: url('image/Magnifier.svg') no-repeat 10px center / 20px 20px, #FFF;
         transition: all 0.3s ease;
     }
     .search-box input[type="text"]:focus {
@@ -48,7 +100,7 @@
         margin-bottom: 20px;
     }
     .input-container input[type="text"], .button-container button {
-        width: calc(33.333% - 20px); /* Adjust for 3 items per row with gap */
+        width: calc(18% - 20px); /* 调整为每行3项，考虑间隔 */
     }
     .input-container input[type="text"] {
         padding: 10px;
@@ -56,7 +108,6 @@
         border: 1px solid #ccc;
         border-radius: 5px;
         font-size: 16px;
-        border-radius: 15px;
         background-color: #ffffffc5;
     }
     button {
@@ -75,6 +126,75 @@
 </style>
 </head>
 <body>
+
+<div class="shortcut-icons-container">
+    <div class="shortcut-icons">
+        <!-- 示例图标 -->
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://admin.klook.com/agent/api/slackbot" class="icon-box" target="_blank">
+                <img src="image/admin_robot.svg" alt="SlackBot">
+            </a>
+            <div class="icon-label">SlackBot</div>
+        </div>
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://admin.klook.com/act/activity/list" class="icon-box" target="_blank">
+                <img src="image/admin_activity.svg" alt="TTD活动列表">
+            </a>
+            <div class="icon-label">TTD活动列表</div>
+        </div>
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://admin.klook.com/storage/realtime/inventory/summary" class="icon-box" target="_blank">
+                <img src="image/admin_stock.svg" alt="库存查看">
+            </a>
+            <div class="icon-label">库存查看</div>
+        </div>
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://admin.klook.com/order/search" class="icon-box" target="_blank">
+                <img src="image/admin_order.svg" alt="admin订单搜索">
+            </a>
+            <div class="icon-label">admin订单搜索</div>
+        </div>
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://docs.google.com/spreadsheets/d/10CTOQDjBWqU8XA2LyJBGP7N9UBPpmHquWEJy6W7KzWM/edit#gid=379021134" class="icon-box" target="_blank">
+                <img src="image/admin_excel.svg" alt="部门总表">
+            </a>
+            <div class="icon-label">部门总表</div>
+        </div>
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://www.dianping.com/overseas/openplatform/mt/onoff" class="icon-box" target="_blank">
+                <img src="image/xmd_robot.svg" alt="美团开放平台">
+            </a>
+            <div class="icon-label">美团开放平台</div>
+        </div>
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://eo.dianping.com/epassport/goodmanage/spulist" class="icon-box" target="_blank">
+                <img src="image/xmd_good.svg" alt="美团商品管理">
+            </a>
+            <div class="icon-label">美团商品管理</div>
+        </div>
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://eo.dianping.com/epassport/ordermanage/orderlist" class="icon-box" target="_blank">
+                <img src="image/xmd_order.svg" alt="美团订单管理">
+            </a>
+            <div class="icon-label">美团订单管理</div>
+        </div>
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://klook.klktech.com/zh-CN/bookings" class="icon-box" target="_blank">
+                <img src="image/amp_order.svg" alt="AMP订单搜索">
+            </a>
+            <div class="icon-label">AMP订单搜索</div>
+        </div>
+        <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
+            <a href="https://docs.google.com/spreadsheets/d/1ZrpOSxJVBLKcla9TdK8oH75nGQQEOKxXV7MPgmv82b8/edit#gid=0" class="icon-box" target="_blank">
+                <img src="image/xmd_excel.svg" alt="美团表格">
+            </a>
+            <div class="icon-label">美团表格</div>
+        </div>
+        <div class="break"></div>
+        <!-- 根据需要重复其他图标 -->
+    </div>
+</div>
+
 
 <div class="wrapper">
     <div class="search-container search-box">
@@ -187,7 +307,6 @@
         }
     }
     </script>
-    
 
 </body>
 </html>
