@@ -78,7 +78,7 @@
         margin-top: 50px; /* 确保元素之间有空间 */
     }
     .search-container {
-        margin-bottom: 50px;
+        margin-bottom: 30px;
     }
     .search-box input[type="text"] {
         padding: 10px 10px 10px 40px;
@@ -122,6 +122,20 @@
     }
     button:hover {
         background-color: #0056b3;
+    }
+    .xmd-button {
+        padding: 10px 20px;
+        background-color: #06C1AE; /* 默认的按钮颜色 */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease; /* 平滑过渡效果 */
+    }
+
+    .xmd-button:hover {
+        background-color: #036158; /* 按钮悬浮时的颜色 */
     }
 </style>
 </head>
@@ -196,7 +210,7 @@
 </div>
 
 
-<div class="wrapper">
+<div class="wrapper" style="background-color: #E6EFFA;">
     <div class="search-container search-box">
         <input type="text" id="searchInput" placeholder="输入关键词搜索AMP商品..." onkeypress="searchKeyPress(event)">
         <img src="images/Magnifier.svg" alt="搜索" id="searchIcon" style="cursor: pointer; transform: translateY(40%);width: 40px; height: 40px;" onclick="search()">
@@ -216,7 +230,18 @@
         <button onclick="gotoPricePage()">价格页</button>
     </div>
 </div>
-
+<div class="wrapper" style="background-color: #E0F9F7;">
+    <div class="search-container search-box" style="padding: 5px 0;">
+        <!-- 定义一个细长的输入框，默认显示“输入xmdid” -->
+        <input type="text" id="xmdInput" placeholder="输入新美大ID" style="width: 80%; min-width: 300px; height: 20px;border-radius: 10px;">
+    </div>
+    <div class="button-container">
+        <!-- 定义三个按钮，颜色为绿色 -->
+        <button class="xmd-button" onclick="splitXmdId()">逗号分隔</button>
+        <button class="xmd-button" onclick="gotoGoodsPage()">商品页</button>
+        <button class="xmd-button" onclick="gotoOrderPage()">订单页</button>
+    </div>
+</div>
 <script>
     function search() {
         var keyword = document.getElementById("searchInput").value;
@@ -308,6 +333,22 @@
         } else {
             alert("请至少输入AID");
         }
+    }
+    function splitXmdId() {
+        var xmdId = document.getElementById("xmdInput").value;
+        // 使用正则表达式替换非数字字符为逗号，并去除连续的逗号
+        var formatted = xmdId.replace(/[^0-9]+/g, ',').replace(/,+/g, ',').trim(',');
+        document.getElementById("xmdInput").value = formatted;
+    }
+    
+    function gotoGoodsPage() {
+        var xmdId = document.getElementById("xmdInput").value;
+        window.location.href = `https://eo.dianping.com/epassport/goodmanage/spudetail?categoryid=1008&spuid=${xmdId}`;
+    }
+    
+    function gotoOrderPage() {
+        var xmdId = document.getElementById("xmdInput").value;
+        window.location.href = `https://eo.dianping.com/epassport/ordermanage/orderdetail?orderid=${xmdId}`;
     }
     </script>
 
