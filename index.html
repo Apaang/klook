@@ -22,8 +22,8 @@
         width: 800px; /* 设置宽度 */
         display: flex;
         justify-content: center;
-        padding: 20px 0;
-        margin-top: 50px; /* 与顶部的距离 */
+        padding: 15px 0;
+        margin-top: 40px; /* 与顶部的距离 */
         background-color: rgba(255,255,255,0.5); /* 可选：添加背景色 */
         border-radius: 10px; /* 可选：圆角 */
         backdrop-filter: blur(10px); /* 可选：模糊效果 */
@@ -71,11 +71,11 @@
     .wrapper {
         width: 50%; /* 调整主体宽度 */
         text-align: center;
-        padding: 20px;
+        padding: 15px;
         background-color: rgba(255,255,255,0.5);
         border-radius: 10px;
         backdrop-filter: blur(10px);
-        margin-top: 50px; /* 确保元素之间有空间 */
+        margin-top: 20px; /* 确保元素之间有空间 */
     }
     .search-container {
         margin-bottom: 30px;
@@ -233,12 +233,14 @@
 <div class="wrapper" style="background-color: #E0F9F7;">
     <div class="search-container search-box" style="padding: 5px 0;">
         <!-- 定义一个细长的输入框，默认显示“输入xmdid” -->
-        <input type="text" id="xmdInput" placeholder="输入新美大ID" style="width: 80%; min-width: 300px; height: 20px;border-radius: 10px;">
+        <input type="text" id="xmdInput" placeholder="输入新美大ID" style="width: 60%; min-width: 300px; height: 20px;border-radius: 10px;">   
+        <button class="xmd-button" id="copyButton">复制</button>
+
     </div>
     <div class="button-container">
         <!-- 定义三个按钮，颜色为绿色 -->
-        <button class="xmd-button" onclick="splitXmdId()">逗号分隔</button>
-        <button class="xmd-button" onclick="gotoGoodsPage()">商品页</button>
+        <button class="xmd-button" onclick="gotoSearchPage()">商品搜索页</button>
+        <button class="xmd-button" onclick="gotoGoodsPage()">商品编辑页</button>
         <button class="xmd-button" onclick="gotoOrderPage()">订单页</button>
     </div>
 </div>
@@ -254,7 +256,48 @@
         }
     }
     
+    document.addEventListener('DOMContentLoaded', function() {
+    var xmdInput = document.getElementById("xmdInput");
+
+    // 处理失焦事件
+    xmdInput.addEventListener('blur', function() {
+        splitXmdId();
+    });
+
+    // 检测按键事件，特别是Enter键
+    xmdInput.addEventListener('keydown', function(event) {
+        // 检查是否是Enter键
+        if (event.key === "Enter" || event.keyCode === 13) {
+            // 阻止Enter键的默认行为（如果有）
+            event.preventDefault();
+            // 执行splitXmdId函数
+            splitXmdId();
+        }
+    });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // 获取复制按钮元素
+    var copyButton = document.getElementById("copyButton");
     
+    // 为复制按钮添加点击事件监听器
+    copyButton.addEventListener('click', function() {
+        // 获取xmdInput输入框的内容
+        var xmdInputText = document.getElementById("xmdInput").value;
+        
+        // 将输入框的内容复制到剪贴板
+        navigator.clipboard.writeText(xmdInputText).then(function() {
+            // 复制成功后显示提示信息
+            showAlert("复制成功")
+        }).catch(function(error) {
+            // 复制失败显示错误信息
+            console.error('复制失败: ', error);
+            showAlert("复制失败，请手动复制")
+        });
+    });
+    });
+
+
     function validateAndMoveInput(input, nextInputIds) {
     // 使用正则表达式分割任何非数字字符，分割输入值
     let parts = input.value.split(/[^0-9]+/);
@@ -337,25 +380,55 @@
             alert("请至少输入AID");
         }
     }
+
     function splitXmdId() {
-        var xmdId = document.getElementById("xmdInput").value;
-        // 使用正则表达式替换非数字字符为逗号，并去除连续的逗号
-        var formatted = xmdId.replace(/[^0-9]+/g, ',').replace(/,+/g, ',').trim(',');
-        document.getElementById("xmdInput").value = formatted;
+    var xmdInput = document.getElementById("xmdInput").value.trim(); // 使用trim()处理空白符
+    // 使用正则表达式替换非数字字符为逗号，并去除连续的逗号
+    var formatted = xmdInput.replace(/[^0-9]+/g, ',').replace(/,+/g, ',').trim(',');
+    document.getElementById("xmdInput").value = formatted;
     }
+
+
+    function gotoSearchPage() {
+    var xmdId = document.getElementById("xmdInput").value;
+    // 检查xmdId是否符合格式：纯数字或逗号分隔的纯数字
+    if (!/^\d+(,\d+)*$/.test(xmdId)) {
+        // 显示悬浮提示框：输入错误，请重新输入
+        showAlert("输入错误，请重新输入");
+    } else {
+        // 格式正确，处理逗号分隔的数字
+        var idsArray = xmdId.split(',').map(id => '"' + id + '"');
+        // 构造URL
+        var url = `https://eo.dianping.com/epassport/goodmanage/spulist?tab=book&spuIds=[${idsArray.join(',')}]`;
+        // 打开页面
+        window.location.href = url;
+    }
+    }
+
+
+
     
     function gotoGoodsPage() {
-    var xmdId = document.getElementById("xmdInput").value;
-    // 检查输入是否为空或包含非数字字符
-    if (!xmdId || /\D/.test(xmdId)) {
-        // 显示悬浮提示框
-        showAlert("内容非法，跳转到List页");
-        // 跳转到商品列表页
+    var xmdId = document.getElementById("xmdInput").value.trim();
+    if (!xmdId || !/^\d+(,\d+)*$/.test(xmdId)) {
+        // 显示悬浮提示框：输入框空白，跳转到List页
+        showAlert("输入框空白，跳转到List页");
+        // 在当前页面打开网址
         window.location.href = "https://eo.dianping.com/epassport/goodmanage/spulist";
     } else {
-        window.location.href = `https://eo.dianping.com/epassport/goodmanage/spudetail?categoryid=1008&spuid=${xmdId}`;
+        // 格式正确，处理逗号分隔的数字
+        var ids = xmdId.split(',');
+        // 总是在当前窗口打开第一个网页
+        if (ids.length > 0) {
+            window.location.href = `https://eo.dianping.com/epassport/goodmanage/spudetail?categoryid=1008&spuid=${ids[0]}`;
+            // 如果有更多网页，使用window.open在新标签页中打开
+            for (var i = 1; i < ids.length; i++) {
+                window.open(`https://eo.dianping.com/epassport/goodmanage/spudetail?categoryid=1008&spuid=${ids[i]}`, '_blank');
+            }
+        }
     }
-    }
+}
+
 
     function gotoOrderPage() {
         var xmdId = document.getElementById("xmdInput").value;
