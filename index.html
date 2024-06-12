@@ -193,7 +193,7 @@
             <div class="icon-label">美团订单管理</div>
         </div>
         <div style="display: inline-block; text-align: center;"> <!-- 为图标和文字添加容器 -->
-            <a href="https://klook.klktech.com/zh-CN/bookings" class="icon-box" target="_self">
+            <a href="https://klook.klktech.cn/zh-CN/bookings" class="icon-box" target="_self">
                 <img src="images/amp_order.svg" alt="AMP订单搜索">
             </a>
             <div class="icon-label">AMP订单搜索</div>
@@ -247,7 +247,7 @@
 <script>
     function search() {
         var keyword = document.getElementById("searchInput").value;
-        window.location.href = `https://klook.klktech.com/zh-CN/search?keyword=${encodeURIComponent(keyword)}`;
+        window.location.href = `https://klook.klktech.cn/zh-CN/search?keyword=${encodeURIComponent(keyword)}`;
     }
     
     function searchKeyPress(event) {
@@ -353,7 +353,7 @@
     function gotoAMPPage() {
         var aid = document.getElementById("aidInput").value;
         if (aid) {
-            window.location.href = `https://klook.klktech.com/zh-CN/activity/${aid}`;
+            window.location.href = `https://klook.klktech.cn/zh-CN/activity/${aid}`;
         } else {
             alert("请输入AID");
         }
@@ -363,7 +363,7 @@
         var pid = document.getElementById("pidInput").value;
         var skuId = document.getElementById("skuIdInput").value;
         if (pid && skuId) {
-            window.location.href = `https://klook.klktech.com/zh-CN/pay_ticket/${pid}/${skuId}`;
+            window.location.href = `https://klook.klktech.cn/zh-CN/pay_ticket/${pid}/${skuId}`;
         } else {
             alert("请输入PID和SKU ID");
         }
