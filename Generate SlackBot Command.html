@@ -119,6 +119,7 @@
 
     <!-- 按钮容器 -->
     <div class="button-container">
+        <button id="SlackBot">SlackBot</button>
         <button id="copyBtn">复制</button>
         <button id="clearBtn">清空</button>
         <button id="generateBtn">生成</button>
@@ -232,6 +233,11 @@
                 cell.textContent = '';
             }
         });
+
+        //网页跳转
+        document.getElementById("SlackBot").onclick = function () {
+            window.location.href = "https://admin.klook.com/agent/api/slackbot"; 
+        };
 
         // 生成按钮功能
         document.getElementById('generateBtn').addEventListener('click', function() {
