@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="images/connect.svg" type="image/svg+xml">
+    <title>美团 SlackBot 对接指令生成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 80%;
+            max-width: 1536px; /* 调整为80%的屏幕宽度 */
+            margin-bottom: 20px;
+            overflow-x: auto; /* 支持横向滚动条 */
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; /* 固定表格布局 */
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+            max-width: 200px; /* 调整最大宽度为200px */
+            max-height: 50px; /* 设置最大高度 */
+            white-space: pre-line; /* 保持换行符换行 */
+            overflow: hidden; /* 超出部分隐藏 */
+            text-overflow: ellipsis; /* 显示省略号 */
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        .input-column {
+            background-color: #e8f5e9;
+        }
+
+        .output-column {
+            background-color: #e3f2fd;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>美团 SlackBot 对接指令生成</h1>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th class="input-column">AID</th>
+                    <th class="input-column">PID</th>
+                    <th class="input-column">SKUID</th>
+                    <th class="input-column">美团ID</th>
+                    <th class="input-column">时段列表</th>
+                    <th class="output-column">美团SKUID</th>
+                    <th class="output-column">slack指令</th>
+                    <th class="output-column">删除指令</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 初始空行 -->
+                <tr>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td contenteditable="true" class="output-column"></td>
+                    <td contenteditable="true" class="output-column"></td>
+                    <td contenteditable="true" class="output-column"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 按钮容器 -->
+    <div class="button-container">
+        <button id="copyBtn">复制</button>
+        <button id="clearBtn">清空</button>
+        <button id="generateBtn">生成</button>
+    </div>
+
+    <script>
+        // 监听粘贴事件
+        document.getElementById('dataTable').addEventListener('paste', function(e) {
+            e.preventDefault();
+            const clipboardData = e.clipboardData || window.clipboardData;
+            const text = clipboardData.getData('text');
+            const rows = text.split('\n'); // 按换行符分割每行数据
+            const table = e.target.closest('table');
+            let startRow = e.target.parentElement.rowIndex;
+            let startCol = e.target.cellIndex;
+
+            rows.forEach((rowText, rowIndex) => {
+                if (rowText.trim() === "") return; // 跳过空行
+                const cells = rowText.split('\t'); // 按制表符分割每列数据
+                let currentRow = table.rows[startRow + rowIndex];
+                if (!currentRow) {
+                    currentRow = table.insertRow();
+                    for (let i = 0; i < table.rows[0].cells.length; i++) {
+                        let newCell = currentRow.insertCell();
+                        newCell.contentEditable = "true";
+                        newCell.className = i < 5 ? "input-column" : "output-column";
+                    }
+                }
+                cells.forEach((cellText, cellIndex) => {
+                    let currentCell = currentRow.cells[startCol + cellIndex];
+                    currentCell.textContent = cellText;
+                });
+            });
+        });
+
+        // 解析SKUID
+        function parseSKUID(skuidText) {
+            let result = [];
+            let skuidParts = skuidText.split(',');
+            skuidParts.forEach(part => {
+                part = part.trim();
+                let [admin_skuid, num] = part.includes('x') || part.includes('X')
+                    ? part.split(/x/i)
+                    : [part, 1];
+                result.push({
+                    admin_skuid: admin_skuid.trim(),
+                    num: parseInt(num, 10)
+                });
+            });
+            return result;
+        }
+
+        // 解析时段列表
+        function parseTimeList(timeListText) {
+            let short_time_list = [];
+            if (!timeListText.trim()) {
+                return ["00:00"];
+            }
+            short_time_list = timeListText.split(/,|\n/).map(time => time.trim());
+            return short_time_list;
+        }
+
+        // 生成美团SKUID列表
+        function generateMeituanSKUIDList(skuid, meituanID, short_time_list) {
+            let meituanSKUIDList = [];
+            short_time_list.forEach(short_time => {
+                let entry = `${skuid}@${meituanID}@${short_time}:00`;
+                meituanSKUIDList.push(entry);
+            });
+            return meituanSKUIDList.join('<br>');
+        }
+
+        // 生成slack指令列表
+        function generateSlackCommandList(aid, pid, meituanID, adminSkuidList, originalSkuid, meituanSKUIDList, shortTimeList) {
+            let slackCommandList = [];
+            meituanSKUIDList.forEach((current_meituan_skuid, index) => {
+                let current_time = shortTimeList[index];
+                adminSkuidList.forEach(admin_skuid_dict => {
+                    let admin_skuid = admin_skuid_dict.admin_skuid;
+                    let num = admin_skuid_dict.num;
+                    let command = `xmd_product_add_v2|${aid};${pid};${admin_skuid};${current_meituan_skuid};${current_time}:00;${num};${meituanID};1008;`;
+                    slackCommandList.push(command);
+                });
+            });
+            return slackCommandList.join('<br>');
+        }
+
+        // 生成删除指令
+        function generateDeleteCommand(meituanID) {
+            return `xmd_product_del|${meituanID}`;
+        }
+
+        // 复制按钮功能
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            let range = document.createRange();
+            range.selectNode(document.getElementById('dataTable'));
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+            alert('表格内容已复制到剪贴板！');
+        });
+
+        // 清空按钮功能
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            const table = document.getElementById('dataTable').tBodies[0];
+            while (table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+            for (let cell of table.rows[0].cells) {
+                cell.textContent = '';
+            }
+        });
+
+        // 生成按钮功能
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            const table = document.getElementById('dataTable').tBodies[0];
+            let rows = table.rows;
+
+            for (let i = 0; i < rows.length; i++) {
+                let row = rows[i];
+                let aid = row.cells[0].textContent.trim();
+                let pid = row.cells[1].textContent.trim();
+                let skuid = row.cells[2].textContent.trim();
+                let meituanID = row.cells[3].textContent.trim();
+                let timeList = row.cells[4].textContent.trim();
+
+                if (!aid || !pid || !skuid || !meituanID) {
+                    continue;
+                }
+
+                let adminSkuidList = parseSKUID(skuid);
+                let shortTimeList = parseTimeList(timeList);
+
+                let meituanSKUIDList = generateMeituanSKUIDList(skuid, meituanID, shortTimeList);
+                row.cells[5].innerHTML = meituanSKUIDList;
+
+                let slackCommandList = generateSlackCommandList(aid, pid, meituanID, adminSkuidList, skuid, meituanSKUIDList.split('<br>'), shortTimeList);
+                row.cells[6].innerHTML = slackCommandList;
+
+                let deleteCommand = generateDeleteCommand(meituanID);
+                row.cells[7].textContent = deleteCommand;
+            }
+        });
+    </script>
+</body>
+</html>
