@@ -122,7 +122,10 @@
         <button id="SlackBot">SlackBot</button>
         <button id="copyBtn">复制</button>
         <button id="clearBtn">清空</button>
-        <button id="generateBtn">生成</button>
+        <button id="generateBtn">生成V2</button>
+        <button id="generateV3QYWBtn">生成V3（趣游玩）</button>
+        <button id="generateV3ZYBtn">生成V3（自营）</button>
+
     </div>
 
     <script>
@@ -154,6 +157,15 @@
                 });
             });
         });
+
+        document.getElementById('generateV3QYWBtn').addEventListener('click', function() {
+            generateV3('63');
+        });
+
+        document.getElementById('generateV3ZYBtn').addEventListener('click', function() {
+            generateV3('407200785');
+        });
+
 
         // 解析SKUID
         function parseSKUID(skuidText) {
@@ -206,6 +218,92 @@
             });
             return slackCommandList.join('<br>');
         }
+
+        function generateV3(xmd_shop_id) {
+            const table = document.getElementById('dataTable').tBodies[0];
+            let rows = table.rows;
+
+            for (let i = 0; i < rows.length; i++) {
+                let row = rows[i];
+                let aid = row.cells[0].textContent.trim();
+                let pid = row.cells[1].textContent.trim();
+                let skuid = row.cells[2].textContent.trim();
+                let meituanID = row.cells[3].textContent.trim();
+                let timeList = row.cells[4].textContent.trim();
+
+                if (!aid || !pid || !skuid || !meituanID) {
+                    continue;
+                }
+
+                // 解析SKUID并添加缺失的数量（默认为1）
+                let adminSkuidList = parseSKUIDWithDefaultQuantity(skuid);
+
+                // 解析时段
+                let shortTimeList = parseTimeList(timeList);
+
+                // 生成Meituan SKUID列表
+                let meituanSKUIDList = generateMeituanSKUIDListWithQuantity(skuid, meituanID, shortTimeList, adminSkuidList);
+                row.cells[5].innerHTML = meituanSKUIDList;
+
+                // 生成Slack指令
+                let slackCommand = generateSlackCommandV3(aid, pid, meituanID, adminSkuidList, meituanSKUIDList.split('<br>'), shortTimeList, xmd_shop_id);
+                row.cells[6].innerHTML = slackCommand;
+
+                // 生成删除指令
+                let deleteCommand = generateDeleteCommand(meituanID);
+                row.cells[7].textContent = deleteCommand;
+            }
+        }
+
+
+        // 解析SKUID并添加缺失的数量（默认为1）
+        function parseSKUIDWithDefaultQuantity(skuidText) {
+            let result = [];
+            let skuidParts = skuidText.split(',');
+            skuidParts.forEach(part => {
+                part = part.trim();
+                let [admin_skuid, num] = part.includes('x') || part.includes('X')
+                    ? part.split(/x/i)
+                    : [part, 1];
+                result.push({
+                    admin_skuid: admin_skuid.trim(),
+                    num: parseInt(num, 10)
+                });
+            });
+            return result;
+        }
+
+        // 生成带有数量的Meituan SKUID列表
+        function generateMeituanSKUIDListWithQuantity(skuid, meituanID, shortTimeList, adminSkuidList) {
+            let meituanSKUIDList = [];
+            adminSkuidList.forEach(adminSkuidDict => {
+                // 处理没有指定数量的SKUID
+                let skuidWithQuantity = `${adminSkuidDict.admin_skuid}x${adminSkuidDict.num || 1}`;
+                shortTimeList.forEach(short_time => {
+                    let entry = `${skuidWithQuantity}@${short_time}:00`;
+                    meituanSKUIDList.push(entry);
+                });
+            });
+            return meituanSKUIDList.join('<br>');
+        }
+
+        // 生成V3版本的Slack指令
+        function generateSlackCommandV3(aid, pid, meituanID, adminSkuidList, meituanSKUIDList, shortTimeList, xmd_shop_id) {
+            let slackCommand = `xmd_product_add_v3|${aid};${pid};`;
+
+            // 处理SKU部分，生成 "sku_id x sku_count" 的形式
+            let skus = adminSkuidList.map(adminSkuidDict => {
+                return `${adminSkuidDict.admin_skuid}x${adminSkuidDict.num || 1}`;
+            }).join('+');
+
+            // 时段部分
+            let timeslot = shortTimeList.map(time => `${time}:00`).join(',');
+
+            slackCommand += `${skus};${timeslot};${xmd_shop_id};${meituanID};1008;`;
+            return slackCommand;
+        }
+
+
 
         // 生成删除指令
         function generateDeleteCommand(meituanID) {
