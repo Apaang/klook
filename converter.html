@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USJ 快速票链接转换器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 600px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .print-group {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .print-group h2 {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .lang-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #40a9ff;
+        }
+        .lang-button {
+            background-color: #52c41a;
+        }
+        .lang-button:hover {
+            background-color: #73d13d;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .error {
+            color: #ff4d4f;
+            margin-top: 10px;
+            display: none;
+        }
+        .bookmarklet-tip {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .bookmarklet {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            color: #1890ff;
+            text-decoration: none;
+            margin: 10px 0;
+            cursor: move;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>USJ 快速票链接转换器</h1>
+        <div class="input-group">
+            <input type="text" id="klookUrl" placeholder="请输入 Klook USJ 链接" required>
+            <button onclick="convertAndRedirect()">查询使用状态</button>
+        </div>
+        <div id="error" class="error"></div>
+
+        <div class="print-group">
+            <h2>跳转到打印页</h2>
+            <div class="lang-buttons">
+                <button class="lang-button" onclick="redirectToPrint('jp')">日语</button>
+                <button class="lang-button" onclick="redirectToPrint('en')">英语</button>
+                <button class="lang-button" onclick="redirectToPrint('ko')">韩语</button>
+                <button class="lang-button" onclick="redirectToPrint('zh-cn')">简中</button>
+                <button class="lang-button" onclick="redirectToPrint('zh-tw')">繁中</button>
+            </div>
+        </div>
+        
+        <div class="bookmarklet-tip">
+
+            <a class="bookmarklet" href="javascript:(function(){
+                function hideElements() {
+                    const elementsToHide = ['*:nth-child(2) > *:nth-child(1) > *:nth-child(4)'];
+                    elementsToHide.forEach(function(selector) {
+                        const elements = document.querySelectorAll(selector);
+                        elements.forEach(function(element) {
+                            if (element) {
+                                element.style.display = 'none';
+                                console.log('已隐藏元素:', selector);
+                            }
+                        });
+                    });
+                }
+                hideElements();
+                const observer = new MutationObserver(function() {
+                    hideElements();
+                });
+                observer.observe(document.documentElement, { childList: true, subtree: true });
+            })();">USJ凭证隐藏价格</a>
+            <p>使用方法：</p>
+            <ol style="text-align: left;">
+                <li>将上面的"USJ凭证隐藏价格"链接拖动到浏览器书签栏</li>
+                <li>打开 USJ 页面后，点击书签栏中的"隐藏元素"即可隐藏不需要的内容</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let lastEncodedParam = '';
+
+        function convertKlookToUsjUrl(klookUrl) {
+            const urlPattern = /^https?:\/\/(www\.)?klook\.(cn|com)\/upload_voucher\/USJ\/.*?\.html$/;
+            if (!urlPattern.test(klookUrl)) {
+                throw new Error("无效的 Klook URL 格式");
+            }
+
+            try {
+                const param = klookUrl.split('/USJ/')[1].replace('.html', '');
+                const processedParam = param.replace(/-/g, '/');
+                const encodedParam = encodeURIComponent(processedParam);
+                lastEncodedParam = encodedParam; // 保存编码后的参数
+                return `https://express.usj.co.jp/app/guest/qr?info=${encodedParam}`;
+            } catch (e) {
+                throw new Error(`URL 转换失败: ${e.message}`);
+            }
+        }
+
+        function convertAndRedirect() {
+            const input = document.getElementById('klookUrl');
+            const errorDiv = document.getElementById('error');
+            errorDiv.style.display = 'none';
+
+            try {
+                const usjUrl = convertKlookToUsjUrl(input.value.trim());
+                window.open(usjUrl, '_blank');
+            } catch (e) {
+                errorDiv.textContent = e.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function redirectToPrint(lang) {
+            const input = document.getElementById('klookUrl');
+            const errorDiv = document.getElementById('error');
+            errorDiv.style.display = 'none';
+            
+            try {
+                // 直接从输入框获取URL并转换
+                const klookUrl = input.value.trim();
+                if (!klookUrl) {
+                    throw new Error("请输入 Klook USJ 链接");
+                }
+                
+                // 转换URL并获取参数
+                const param = klookUrl.split('/USJ/')[1].replace('.html', '');
+                const processedParam = param.replace(/-/g, '/');
+                const encodedParam = encodeURIComponent(processedParam);
+                lastEncodedParam = encodedParam;
+                
+                // 构建打印页URL并跳转
+                const printUrl = `https://express.usj.co.jp/app/guest/qrPrint.html?info=${encodedParam}&lang=${lang}`;
+                window.open(printUrl, '_blank');
+            } catch (e) {
+                errorDiv.textContent = e.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        document.getElementById('klookUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                convertAndRedirect();
+            }
+        });
+    </script>
+</body>
+</html>
