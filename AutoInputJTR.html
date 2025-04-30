@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JTR 自动填写联系人生成器</title>
+    <title>JTR 自动填写联系人</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,7 +14,7 @@
             margin: 0;
             background-color: #f0f2f5;
         }
-        .container {
+        。container {
             text-align: center;
             padding: 20px;
             background-color: white;
@@ -22,14 +22,14 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 600px;
         }
-        .input-group {
+        。input-group {
             display: flex;
             flex-direction: column;
             gap: 15px;
             margin-bottom: 20px;
             align-items: center;
         }
-        .input-item {
+        。input-item {
             display: flex;
             width: 100%;
             align-items: center;
@@ -111,15 +111,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>JTR 自动填写联系人生成器</h1>
+        <h1>JTR 自动填写联系人</h1>
         <div class="input-group">
             <div class="input-item">
-                <label for="name">姓名/用户名：</label>
-                <input type="text" id="name" placeholder="请输入要自动填写的姓名或用户名" value="Kay Xie">
+                <label for="name">联系人姓名：</label>
+                <input type="text" id="name" placeholder="请输入联系人姓名">
             </div>
             <div class="input-item">
                 <label for="email">邮箱地址：</label>
-                <input type="text" id="email" placeholder="请输入要自动填写的邮箱地址" value="Kay.Xie@test.com">
+                <input type="text" id="email" placeholder="请输入邮箱用户接受出票信息">
             </div>
             <button onclick="generateBookmarklet()">生成书签工具</button>
         </div>
