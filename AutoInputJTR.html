@@ -14,7 +14,7 @@
             margin: 0;
             background-color: #f0f2f5;
         }
-        。container {
+        .container {
             text-align: center;
             padding: 20px;
             background-color: white;
@@ -22,14 +22,14 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 600px;
         }
-        。input-group {
+        .input-group {
             display: flex;
             flex-direction: column;
             gap: 15px;
             margin-bottom: 20px;
             align-items: center;
         }
-        。input-item {
+        .input-item {
             display: flex;
             width: 100%;
             align-items: center;
@@ -114,12 +114,12 @@
         <h1>JTR 自动填写联系人</h1>
         <div class="input-group">
             <div class="input-item">
-                <label for="name">联系人姓名：</label>
-                <input type="text" id="name" placeholder="请输入联系人姓名">
+                <label for="name">姓名/用户名：</label>
+                <input type="text" id="name" placeholder="请输入要自动填写的姓名或用户名" value="">
             </div>
             <div class="input-item">
                 <label for="email">邮箱地址：</label>
-                <input type="text" id="email" placeholder="请输入邮箱用户接受出票信息">
+                <input type="text" id="email" placeholder="请输入要自动填写的邮箱地址" value="">
             </div>
             <button onclick="generateBookmarklet()">生成书签工具</button>
         </div>
@@ -203,9 +203,10 @@
             resultSection.style.display = 'block';
         }
 
-        // 页面加载时自动生成一次
+        // 修改页面加载行为，不再自动生成书签
         window.onload = function() {
-            generateBookmarklet();
+            // 不再自动调用 generateBookmarklet()
+            // 只在用户点击按钮时生成
         };
     </script>
 </body>
