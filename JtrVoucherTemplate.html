@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>取票凭证</title>
+    <style>
+        /* A4纸张设置 */
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            /* A4纸张尺寸: 210mm x 297mm */
+            width: 210mm;
+            min-height: 297mm;
+            box-sizing: border-box;
+        }
+        
+        .container {
+            width: 100%;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 20mm;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            margin-bottom: 20px;
+        }
+        
+        .route-title {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 21px;
+            margin-bottom: 12px;
+        }
+        
+        .trip-info {
+            color: #333;
+            font-size: 14px;
+            line-height: 16px;
+            margin: 6px 0;
+        }
+        
+        .trip-info span {
+            margin-right: 32px;
+        }
+        
+        .passenger-info {
+            color: #333;
+            font-size: 14px;
+            line-height: 16px;
+            margin: 6px 0;
+        }
+        
+        .train-details {
+            margin-bottom: 20px;
+        }
+        
+        .train-card {
+            background-color: #f8fafe;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 14px;
+            margin-top: 12px;
+            padding: 18px 20px;
+        }
+        
+        .train-name {
+            color: #999;
+            line-height: 17px;
+            margin-bottom: 7px;
+        }
+        
+        .schedule-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        
+        .time-cell {
+            padding: 0;
+            text-align: left;
+            color: rgba(0,0,0,.87);
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: -.4px;
+            line-height: 21px;
+            width: 80px;
+        }
+        
+        .time-cell.right {
+            text-align: right;
+        }
+        
+        .station-name {
+            color: rgba(0,0,0,.87);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 12px;
+            margin-top: 4px;
+        }
+        
+        .duration-cell {
+            padding: 0;
+            color: rgba(0,0,0,.38);
+            text-align: center;
+        }
+        
+        .duration-dots {
+            display: inline-block;
+            border-radius: 50%;
+            height: 4px;
+            margin-right: 6px;
+            vertical-align: middle;
+            width: 4px;
+        }
+        
+        .seat-type {
+            color: #4985e6;
+            margin-top: 12px;
+        }
+        
+        .divider {
+            background-color: #fff;
+            padding: 32px 0 12px 0;
+        }
+        
+        .divider hr {
+            border-style: none;
+            border-bottom: 1px solid #f5f5f5;
+            margin: 0;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+        }
+        
+        .instructions-title {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 19px;
+        }
+        
+        .instruction-content {
+            color: #333;
+            font-size: 14px;
+            line-height: 16px;
+            margin-top: 32px;
+        }
+        
+        .step-title {
+            font-weight: 500;
+        }
+        
+        .qr-section {
+            margin: 12px 0 30px;
+        }
+        
+        .qr-title {
+            font-weight: 500;
+        }
+        
+        .qr-description {
+            color: #666;
+            margin-top: 6px;
+            white-space: pre-line;
+        }
+        
+        .qr-container {
+            text-align: center;
+            width: 100%;
+            font-size: 14px;
+            line-height: 17px;
+        }
+        
+        .qr-image {
+            width: 200px;
+            height: 200px;
+        }
+        
+        .booking-number {
+            margin-top: 10px;
+        }
+        
+        .ticket-number-section {
+            background: #f5f5f5;
+            border-radius: 16px;
+            margin: 12px auto;
+            min-width: 318px;
+            padding: 12px;
+            text-align: center;
+            width: fit-content;
+        }
+        
+        .ticket-number-label {
+            color: #757575;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 21px;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        
+        .ticket-number-divider {
+            background: #e6e6e6;
+            display: inline-block;
+            height: 1px;
+            vertical-align: middle;
+            width: 24px;
+        }
+        
+        .ticket-number-text {
+            margin: 0 8px;
+        }
+        
+        .ticket-number {
+            color: #2073f9;
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 26.4px;
+        }
+        
+        .guide-button {
+            margin: 0;
+            border: 1px solid #4a4a4a;
+            border-radius: 99rem;
+            display: inline-block;
+            font-weight: 500;
+            outline: none;
+            padding: 8px 20px;
+            text-decoration: none;
+            color: #212121;
+            font-size: 16px;
+            line-height: 1.44;
+            margin-top: 16px;
+        }
+        
+        @media print {
+            body {
+                background-color: #fff;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部信息 -->
+        <div class="header">
+            <div class="route-title">{{DEPARTURE_STATION}} - {{ARRIVAL_STATION}}</div>
+            <div class="trip-info">
+                <span>{{TRAVEL_DATE}}</span>
+                <span>{{DURATION}}</span>
+                <span>{{TRANSFER_TYPE}}</span>
+            </div>
+            <div class="passenger-info">乘客： {{PASSENGER_INFO}}</div>
+        </div>
+        
+        <!-- 列车详情 -->
+        <div class="train-details">
+            <div class="train-card">
+                <div class="train-name">{{TRAIN_NAME}}</div>
+                <table class="schedule-table">
+                    <tbody>
+                        <tr>
+                            <td class="time-cell">
+                                <div>{{DEPARTURE_TIME}}</div>
+                                <div class="station-name">{{DEPARTURE_STATION}}</div>
+                            </td>
+                            <td class="duration-cell">
+                                <div>
+                                    <i class="duration-dots" style="background-color:rgba(0,0,0,0.04)"></i>
+                                    <i class="duration-dots" style="background-color:rgba(0,0,0,0.06)"></i>
+                                    <i class="duration-dots" style="background-color:rgba(0,0,0,0.08)"></i>
+                                    <i class="duration-dots" style="background-color:rgba(0,0,0,0.10)"></i>
+                                    <span>{{DURATION}}</span>
+                                    <i class="duration-dots" style="background-color:rgba(0,0,0,0.10)"></i>
+                                    <i class="duration-dots" style="background-color:rgba(0,0,0,0.08)"></i>
+                                    <i class="duration-dots" style="background-color:rgba(0,0,0,0.06)"></i>
+                                    <i class="duration-dots" style="background-color:rgba(0,0,0,0.04)"></i>
+                                </div>
+                            </td>
+                            <td class="time-cell right">
+                                <div>{{ARRIVAL_TIME}}</div>
+                                <div class="station-name">{{ARRIVAL_STATION}}</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="seat-type">{{SEAT_TYPE}}</div>
+            </div>
+            
+            <div class="divider">
+                <hr>
+            </div>
+        </div>
+        
+        <!-- 使用说明 -->
+        <div class="instructions">
+            <div class="instructions-title">如何使用</div>
+            <div class="instruction-content">
+                <div class="step-title">1.&nbsp;{{DEPARTURE_STATION}}&nbsp;-&nbsp;{{ARRIVAL_STATION}}</div>
+                
+                <div class="qr-section">
+                    <div class="qr-title">使用二维码取票</div>
+                    <div class="qr-description">请于自动售票机使用二维码取票（每位乘客领取2张票），详情请查看取票指南</div>
+                </div>
+                
+                <div class="qr-container">
+                    <table align="center" style="width:100%;">
+                        <tbody>
+                            <tr>
+                                <td style="width:50%;">
+                                    <img class="qr-image" src="F:\文档\Code\Projects\打印JTR凭证PDF\unnamed.png" alt="取票二维码">
+                                    <div class="booking-number">预订编号:{{BOOKING_NUMBER}}</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="ticket-number-section">
+                    <div class="ticket-number-label">
+                        <span class="ticket-number-divider"></span>
+                        <span class="ticket-number-text">取票编号</span>
+                        <span class="ticket-number-divider"></span>
+                    </div>
+                    <div class="ticket-number">
+                        <span>05068837005</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 指南按钮 -->
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="https://www.klook.cn/zh-CN/notice_content/27255/?from_source=email&from_medium=system_email&from_campaign=mob_ptp_voucher" class="guide-button" target="_blank">
+                查看领取指南
+            </a>
+        </div>
+    </div>
+</body>
+</html>
