@@ -1,9 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const textDropZone = document.getElementById('text-drop-zone');
     const imageDropZone = document.getElementById('image-drop-zone');
+    const imageInput = document.getElementById('image-input');
     const textInput = document.getElementById('text-input');
     const preview = document.getElementById('preview');
-    const generateBtn = document.getElementById('generate-btn');
+    const generateBtnGroup = document.getElementById('generate-btn-group');
 
     let qrCodeUrl = '';
 
@@ -42,11 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * 处理图片拖放
-     * @param {DataTransfer} dataTransfer - 拖放数据
+     * @function handleImageFile
+     * @description 统一处理图片文件，包括读取、预览和存储base64数据。
+     * @param {File} file - 用户提供图片文件.
      */
-    function handleImageDrop(dataTransfer) {
-        const file = dataTransfer.files[0];
+    function handleImageFile(file) {
         if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -60,15 +61,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setupDropZone(textDropZone, handleTextDrop);
-    setupDropZone(imageDropZone, handleImageDrop);
+    setupDropZone(imageDropZone, (dataTransfer) => handleImageFile(dataTransfer.files[0]));
 
     textInput.addEventListener('input', checkInputs);
+
+    imageInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            handleImageFile(e.target.files[0]);
+        }
+    });
+
+    window.addEventListener('paste', (e) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                handleImageFile(blob);
+                break; // 只处理第一张图片
+            }
+        }
+    });
 
     /**
      * 检查输入是否完成，以启用生成按钮
      */
+    /**
+     * 检查输入是否完成，以启用生成按钮
+     */
     function checkInputs() {
-        generateBtn.disabled = !(textInput.value.trim() && qrCodeUrl);
+        const allButtons = document.querySelectorAll('.generate-btn');
+        const isEnabled = textInput.value.trim() && qrCodeUrl;
+        allButtons.forEach(button => {
+            button.disabled = !isEnabled;
+        });
     }
 
     const templateHtml = `
@@ -344,8 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="route-title">{{DEPARTURE_STATION}} - {{ARRIVAL_STATION}}</div>
             <div class="trip-info">
                 <span>{{TRAVEL_DATE}}</span>
-                <span>{{DURATION}}</span>
-                <span>{{TRANSFER_TYPE}}</span>
             </div>
             <div class="passenger-info">乘客： {{PASSENGER_INFO}}</div>
         </div>
@@ -353,7 +376,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- 列车详情 -->
         <div class="train-details">
             <div class="train-card">
-                <div class="train-name">{{TRAIN_NAME}}</div>
                 <table class="schedule-table">
                     <tbody>
                         <tr>
@@ -397,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 <div class="qr-section">
                     <div class="qr-title">使用二维码取票</div>
-                    <div class="qr-description">请于自动售票机使用二维码取票（每位乘客领取2张票），详情请查看取票指南</div>
+                    <div class="qr-description">请于带有"5489"或"新幹線·特急"logo的⾃动售票机，使⽤⼆维码取票（每位乘客领取2张票），详情请查看取票指南</div>
                 </div>
                 
                 <div class="qr-container">
@@ -437,12 +459,23 @@ document.addEventListener('DOMContentLoaded', () => {
 </html>
 `;
 
-    generateBtn.addEventListener('click', () => {
+    generateBtnGroup.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('generate-btn')) return;
+
+        const seatType = e.target.dataset.seatType;
         const text = textInput.value;
         const data = parseText(text);
+
+        if (!data) {
+            alert('无法解析文本，请检查格式。');
+            return;
+        }
+
+        data.SEAT_TYPE = seatType;
         data.QR_CODE_URL = qrCodeUrl;
 
         const filledHtml = fillTemplate(templateHtml, data);
+
         const newWindow = window.open();
         newWindow.document.write(filledHtml);
         newWindow.document.close();
@@ -461,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 定义文本标签到数据键的映射
         const keyMapping = {
             'Reservation No.': 'BOOKING_NUMBER',
-            'Ticket Name': 'SEAT_TYPE',
+            'Ticket Name': 'Ticket Name', // 使用 Ticket Name 作为键
             'Travel Date': 'TRAVEL_DATE',
             'Area': 'AREA',
             'No. of Users': 'PASSENGER_INFO'
@@ -541,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function fillTemplate(template, data) {
         let filled = template;
         for (const key in data) {
-            const regex = new RegExp(`{{${key}}}`, 'g');
+            const regex = new RegExp('{{' + key + '}}', 'g');
             filled = filled.replace(regex, data[key]);
         }
         return filled;
