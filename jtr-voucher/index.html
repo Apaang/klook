@@ -26,6 +26,27 @@
         h1 {
             color: #333;
             margin-bottom: 30px;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .tutorial-link {
+            color: #4a90e2;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 6px 12px;
+            border: 1px solid #4a90e2;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .tutorial-link:hover {
+            background-color: #4a90e2;
+            color: white;
         }
         .drop-zone {
             border: 2px dashed #ccc;
@@ -74,11 +95,19 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
+        .file-label {
+            color: #4a90e2;
+            text-decoration: underline;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>JTR凭证生成器</h1>
+        <div class="title-container">
+            <h1>JTR凭证生成器</h1>
+            <a href="使用方法.gif" class="tutorial-link" target="_blank">使用教程</a>
+        </div>
         
         <div id="text-drop-zone" class="drop-zone">
             <p>将凭证文本内容拖放到此处，或直接粘贴到下方文本框</p>
@@ -86,11 +115,16 @@
         </div>
 
         <div id="image-drop-zone" class="drop-zone">
-            <p>将二维码图片拖放到此处</p>
+            <p>将二维码图片拖放到此处，或 <label for="image-input" class="file-label">点击选择</label>，或直接粘贴</p>
             <img id="preview" src="" alt="图片预览" style="display:none;"/>
+            <input type="file" id="image-input" accept="image/*" style="display: none;">
         </div>
 
-        <button id="generate-btn" disabled>生成凭证</button>
+        <div id="generate-btn-group">
+            <button class="generate-btn" data-seat-type="自由座席-普通车厢" disabled>自由座席-普通车厢</button>
+            <button class="generate-btn" data-seat-type="指定座席-普通车厢" disabled>指定座席-普通车厢</button>
+            <button class="generate-btn" data-seat-type="指定座席-绿色车厢" disabled>指定座席-绿色车厢</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
