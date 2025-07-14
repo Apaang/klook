@@ -471,6 +471,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // 检查所有必需的变量是否都存在
+        const requiredKeys = ['DEPARTURE_STATION', 'ARRIVAL_STATION', 'TRAVEL_DATE', 'PASSENGER_INFO', 'DEPARTURE_TIME', 'ARRIVAL_TIME', 'DURATION', 'BOOKING_NUMBER', 'TITTLE'];
+        const missingKeys = requiredKeys.filter(key => !data[key]);
+
+        if (missingKeys.length > 0) {
+            alert(`解析文本后缺少以下信息，请检查文本内容或格式：\n${missingKeys.join(', ')}`);
+            return;
+        }
+
         data.SEAT_TYPE = seatType;
         data.QR_CODE_URL = qrCodeUrl;
 
