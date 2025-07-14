@@ -476,9 +476,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filledHtml = fillTemplate(templateHtml, data);
 
-        const newWindow = window.open();
-        newWindow.document.write(filledHtml);
-        newWindow.document.close();
+        // 创建一个隐藏的iframe用于打印
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'absolute';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(filledHtml);
+        doc.close();
+
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+
+        // 打印后移除iframe
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+        }, 1000);
     });
 
     /**
