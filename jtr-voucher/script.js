@@ -1,4 +1,4 @@
-document。addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     const textDropZone = document.getElementById('text-drop-zone');
     const imageDropZone = document.getElementById('image-drop-zone');
     const imageInput = document.getElementById('image-input');
@@ -95,6 +95,8 @@ document。addEventListener('DOMContentLoaded', () => {
             button.disabled = !isEnabled;
         });
     }
+
+
 
     const templateHtml = `
 <!DOCTYPE html>
@@ -362,7 +364,7 @@ document。addEventListener('DOMContentLoaded', () => {
 <body>
     <div class="container">
         <div style="text-align: left; margin-bottom: 20px;">
-            <img src="LOGO.png" alt="Logo" style="width: 150px; height: auto;">
+            <img src="{{LOGO_URL}}" alt="Logo" style="width: 150px; height: auto;">
         </div>
         <!-- 头部信息 -->
         <div class="header">
@@ -459,7 +461,8 @@ document。addEventListener('DOMContentLoaded', () => {
 </html>
 `;
 
-    generateBtnGroup.addEventListener('click', (e) => {
+    generateBtnGroup.addEventListener('click', async (e) => {
+        const originalTitle = document.title;
         if (!e.target.classList.contains('generate-btn')) return;
 
         const seatType = e.target.dataset.seatType;
@@ -473,6 +476,18 @@ document。addEventListener('DOMContentLoaded', () => {
 
         data.SEAT_TYPE = seatType;
         data.QR_CODE_URL = qrCodeUrl;
+        data.LOGO_URL = 'https://apaang.github.io/klook/jtr-voucher/LOGO.png';
+
+        // 检查缺失信息并提示用户输入
+        const missingData = checkMissingData(templateHtml, data);
+        if (missingData.length > 0) {
+            const userInputData = promptForMissingData(missingData);
+            if (userInputData === null) {
+                return; // 用户取消了输入
+            }
+            // 将用户输入的数据合并到原数据中
+            Object.assign(data, userInputData);
+        }
 
         const filledHtml = fillTemplate(templateHtml, data);
 
@@ -489,13 +504,19 @@ document。addEventListener('DOMContentLoaded', () => {
         doc.write(filledHtml);
         doc.close();
 
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
+        // 设置主页面的标题用于打印
+        document.title = data.TITTLE || 'JTR 凭证';
 
-        // 打印后移除iframe
-        setTimeout(() => {
-            document.body.removeChild(iframe);
-        }, 1000);
+        // 等待iframe内容加载完成再打印
+        iframe.onload = function() {
+            iframe.contentWindow.focus(); // 确保iframe获得焦点
+            iframe.contentWindow.print();
+            // 打印后移除iframe并恢复原始标题
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                document.title = originalTitle;
+            }, 1000);
+        };
     });
 
     /**
@@ -580,6 +601,99 @@ document。addEventListener('DOMContentLoaded', () => {
         data.TRAIN_NAME = data.TRAIN_NAME || 'e5489'; // 示例数据
 
         return data;
+    }
+
+    /**
+     * 检查模板中缺失的数据
+     * @param {string} template - HTML模板字符串
+     * @param {object} data - 已有的数据
+     * @returns {Array} - 缺失的数据键数组
+     */
+    function checkMissingData(template, data) {
+        const placeholderRegex = /{{([^}]+)}}/g;
+        const placeholders = [];
+        let match;
+        
+        // 提取模板中所有的占位符
+        while ((match = placeholderRegex.exec(template)) !== null) {
+            const key = match[1].trim();
+            if (!placeholders.includes(key)) {
+                placeholders.push(key);
+            }
+        }
+        
+        // 检查哪些占位符没有对应的数据或数据为空
+        const missingData = placeholders.filter(key => {
+            // LOGO_URL 和 QR_CODE_URL 是内部处理的，不需要用户输入
+            if (key === 'LOGO_URL' || key === 'QR_CODE_URL') {
+                return false;
+            }
+            return !data[key] || data[key].toString().trim() === '';
+        });
+        
+        return missingData;
+    }
+
+    /**
+     * 提示用户输入缺失的数据
+     * @param {Array} missingKeys - 缺失的数据键数组
+     * @returns {Object|null} - 用户输入的数据对象，如果用户取消则返回null
+     */
+    function promptForMissingData(missingKeys) {
+        const userInputData = {};
+        
+        // 为缺失的键提供友好的中文名称
+        const keyDisplayNames = {
+            'TITTLE': '页面标题',
+            'DEPARTURE_STATION': '出发站',
+            'ARRIVAL_STATION': '到达站',
+            'TRAVEL_DATE': '旅行日期',
+            'PASSENGER_INFO': '乘客信息',
+            'DEPARTURE_TIME': '出发时间',
+            'ARRIVAL_TIME': '到达时间',
+            'DURATION': '旅行时长',
+            'SEAT_TYPE': '座席类型',
+            'QR_CODE_URL': '二维码图片',
+            'BOOKING_NUMBER': '预订编号',
+            'Ticket Name': '票券名称',
+            'TRANSFER_TYPE': '换乘类型',
+            'TRAIN_NAME': '列车名称'
+        };
+        
+        let message = '检测到以下信息缺失，请输入相应的值：\n\n';
+        missingKeys.forEach((key, index) => {
+            const displayName = keyDisplayNames[key] || key;
+            message += `${index + 1}. ${displayName} (${key})\n`;
+        });
+        
+        message += '\n点击确定开始逐一输入，点击取消放弃生成。';
+        
+        if (!confirm(message)) {
+            return null;
+        }
+        
+        // 逐一提示用户输入每个缺失的值
+        for (const key of missingKeys) {
+            const displayName = keyDisplayNames[key] || key;
+            let userInput = prompt(`请输入 ${displayName}:`, '');
+            
+            if (userInput === null) {
+                // 用户点击了取消
+                return null;
+            }
+            
+            // 如果用户输入为空，给一个默认值或再次提示
+            if (userInput.trim() === '') {
+                userInput = prompt(`${displayName} 不能为空，请重新输入:`, '');
+                if (userInput === null || userInput.trim() === '') {
+                    return null;
+                }
+            }
+            
+            userInputData[key] = userInput.trim();
+        }
+        
+        return userInputData;
     }
 
     /**
