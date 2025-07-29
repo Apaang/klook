@@ -1,4 +1,4 @@
-document addEventListener('DOMContentLoaded'， () => {
+document.addEventListener('DOMContentLoaded', () => {
     const textDropZone = document.getElementById('text-drop-zone');
     const imageDropZone = document.getElementById('image-drop-zone');
     const imageInput = document.getElementById('image-input');
