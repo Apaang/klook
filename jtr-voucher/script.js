@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document。addEventListener('DOMContentLoaded', () => {
     const textDropZone = document.getElementById('text-drop-zone');
     const imageDropZone = document.getElementById('image-drop-zone');
     const imageInput = document.getElementById('image-input');
@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="ticket-number-divider"></span>
                     </div>
                     <div class="ticket-number">
-                        <span>05068837005</span>
+                        <span>05068830745</span>
                     </div>
                 </div>
             </div>
