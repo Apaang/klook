@@ -55,10 +55,12 @@
             border: 1px solid #ddd;
             min-width: 120px;
             max-width: 280px; /* 根据测试文本调整宽度 */
-            white-space: nowrap;
+            white-space: pre-line;
             overflow: hidden;
             text-overflow: ellipsis;
             font-size: 16px;
+            word-wrap: break-word;
+            line-height: 1.2;
             color: #333;
         }
 
@@ -100,6 +102,13 @@
 
         th.blue-column {
             background-color: #bbdefb;
+        }
+
+        /* 场次名列特殊样式 - 启用CSS文本溢出 */
+        .session-name-column {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* 黄色列样式 - 最后两列 */
@@ -220,7 +229,26 @@
             background-color: #fffbf0 !important;
         }
 
-
+        /* 悬浮提示样式 */
+        .cell-tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            z-index: 2000;
+            max-width: 300px;
+            word-wrap: break-word;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: none;
+            pointer-events: none;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 5px;
+        }
 
         /* 折叠行样式 */
         .collapsed-row {
@@ -246,7 +274,7 @@
                     <th class="green-column">出行场次</th>
                     <th class="green-column">出行日期</th>
                     <th class="green-column">出行人数</th>
-                    <th class="blue-column">场次名</th>
+                    <th class="blue-column session-name-column">场次名</th>
                     <th class="blue-column">采购价格</th>
                     <th class="blue-column">任天堂时间</th>
                     <th class="blue-column">飞猪编码</th>
@@ -262,7 +290,7 @@
                     <td contenteditable="true" class="green-column"></td>
                     <td contenteditable="true" class="green-column"></td>
                     <td contenteditable="true" class="green-column"></td>
-                    <td contenteditable="true" class="blue-column"></td>
+                    <td contenteditable="true" class="blue-column session-name-column"></td>
                     <td contenteditable="true" class="blue-column"></td>
                     <td contenteditable="true" class="blue-column"></td>
                     <td contenteditable="true" class="blue-column"></td>
@@ -286,17 +314,36 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadDataFromStorage();
             ensureEmptyRow();
-            
-            // 为现有单元格添加事件监听器
-            const table = document.getElementById('dataTable');
-            const cells = table.querySelectorAll('td[contenteditable="true"]');
-            cells.forEach(cell => {
-                addCellEventListeners(cell);
-                handleCellContent(cell);
-            });
+            initializeCellTooltips();
         });
 
-
+        // 初始化单元格悬浮提示功能
+        function initializeCellTooltips() {
+            const table = document.getElementById('dataTable');
+            
+            // 为所有单元格添加悬浮提示功能
+            table.addEventListener('mouseover', function(e) {
+                if (e.target.tagName === 'TD' && e.target.textContent.trim()) {
+                    const content = e.target.textContent.trim();
+                    // 检查内容是否超过80字节
+                    if (getByteLength(content) > 80) {
+                        showCellTooltip(e.target, content);
+                    }
+                }
+            });
+            
+            table.addEventListener('mouseout', function(e) {
+                if (e.target.tagName === 'TD') {
+                    hideCellTooltip();
+                }
+            });
+            
+            // 为现有的可编辑单元格添加输入事件监听器
+            const existingCells = table.querySelectorAll('td[contenteditable="true"]');
+            existingCells.forEach(cell => {
+                addCellEventListeners(cell);
+            });
+        }
 
         // 计算字符串字节长度（中文字符按2字节计算）
         function getByteLength(str) {
@@ -312,24 +359,92 @@
             return byteLength;
         }
 
-        // 处理单元格内容长度限制
-        function handleCellContent(cell) {
-            const fullText = cell.textContent.trim();
-            if (getByteLength(fullText) > 80) {
-                // 使用title属性显示完整文本
-                cell.setAttribute('title', fullText);
-            } else {
-                cell.removeAttribute('title');
+        // 截断超过80字节的文本
+        function truncateText(text, maxBytes = 80) {
+            let byteLength = 0;
+            let truncated = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                const char = text.charAt(i);
+                const charBytes = char.match(/[\u4e00-\u9fa5]/) ? 2 : 1;
+                
+                if (byteLength + charBytes > maxBytes) {
+                    break;
+                }
+                
+                byteLength += charBytes;
+                truncated += char;
+            }
+            
+            return byteLength < getByteLength(text) ? truncated + '...' : truncated;
+        }
+
+        // 显示单元格悬浮提示
+        function showCellTooltip(cell, content) {
+            hideCellTooltip(); // 先隐藏已存在的提示
+            
+            const tooltip = document.createElement('div');
+            tooltip.className = 'cell-tooltip';
+            tooltip.textContent = content;
+            tooltip.id = 'cell-tooltip';
+            
+            cell.style.position = 'relative';
+            cell.appendChild(tooltip);
+            
+            // 显示提示
+            setTimeout(() => {
+                tooltip.style.display = 'block';
+            }, 100);
+        }
+
+        // 隐藏单元格悬浮提示
+        function hideCellTooltip() {
+            const existingTooltip = document.getElementById('cell-tooltip');
+            if (existingTooltip) {
+                existingTooltip.remove();
             }
         }
 
         // 为单元格添加事件监听器
         function addCellEventListeners(cell) {
-            // 输入事件监听器
-            cell.addEventListener('input', function() {
-                handleCellContent(this);
-                saveDataToStorage();
-            });
+            // 检查是否是场次名列
+            const isSessionNameColumn = cell.classList.contains('session-name-column');
+            
+            if (isSessionNameColumn) {
+                // 场次名列使用CSS原生处理
+                cell.addEventListener('input', function() {
+                    const content = this.textContent.trim().replace(/[\n\r]/g, '');
+                    this.textContent = content;
+                    this.title = content; // 更新title属性
+                    saveDataToStorage();
+                });
+            } else {
+                // 其他列保持原有的80字节限制逻辑
+                let originalContent = cell.textContent;
+                
+                cell.addEventListener('input', function() {
+                    originalContent = this.textContent.trim().replace(/[\n\r]/g, '');
+                    this.setAttribute('data-full-text', originalContent);
+                    
+                    if (getByteLength(originalContent) > 80) {
+                        const displayText = truncateText(originalContent, 80);
+                        this.textContent = displayText;
+                        this.setAttribute('data-full-text', originalContent);
+                    }
+                    saveDataToStorage();
+                });
+
+                cell.addEventListener('mouseenter', function() {
+                    const fullText = this.getAttribute('data-full-text') || this.textContent;
+                    if (getByteLength(fullText) > 80) {
+                        showCellTooltip(this, fullText);
+                    }
+                });
+
+                cell.addEventListener('mouseleave', function() {
+                    hideCellTooltip();
+                });
+            }
         }
 
         // 监听粘贴事件
@@ -353,11 +468,20 @@
                     if (startCol + cellIndex < 9) { // 只粘贴到输入列（包括预定链接）
                         let currentCell = currentRow.cells[startCol + cellIndex];
                         if (currentCell && currentCell.contentEditable === "true") {
-                            currentCell.textContent = cellText;
-                            // 添加事件监听器
+                            // 自动去除文本前后的空格和换行符
+                            const cleanedText = cellText.trim().replace(/[\n\r]/g, '');
+                            
+                            // 如果是场次名列（第5列，索引为4），使用CSS原生处理
+                            if (startCol + cellIndex === 4) {
+                                currentCell.textContent = cleanedText;
+                                currentCell.title = cleanedText; // 添加title属性用于悬浮提示
+                            } else {
+                                // 其他列保持原有的80字节限制逻辑
+                                currentCell.setAttribute('data-full-text', cleanedText);
+                                const displayText = getByteLength(cleanedText) > 80 ? truncateText(cleanedText, 80) : cleanedText;
+                                currentCell.textContent = displayText;
+                            }
                             addCellEventListeners(currentCell);
-                            // 处理内容长度限制
-                            handleCellContent(currentCell);
                         }
                     }
                 });
@@ -577,8 +701,16 @@
                     cell.className = "blue-column";
                 }
                 
+                // 为场次名列添加特殊样式
+                if (i === 4) {
+                    cell.classList.add('session-name-column');
+                }
+                
                 // 为每个可编辑单元格添加事件监听器
                 addCellEventListeners(cell);
+                cell.addEventListener('input', function() {
+                    saveDataToStorage();
+                });
             }
             
             // 添加操作列
@@ -651,7 +783,6 @@
             const firstRow = table.rows[0];
             for (let i = 0; i < 9; i++) { // 包括预定链接列
                 firstRow.cells[i].textContent = '';
-                firstRow.cells[i].removeAttribute('title');
                 firstRow.cells[i].contentEditable = "true";
                 firstRow.cells[i].classList.remove('disabled-row');
                 firstRow.cells[i].style.fontWeight = 'normal';
@@ -726,7 +857,14 @@
                 
                 // 保存前9列的数据
                 for (let i = 0; i < 9; i++) {
-                    rowData.cells.push(row.cells[i].textContent.trim());
+                    // 对于场次名列（索引4），直接使用textContent，因为它保存的是完整文本
+                    if (i === 4) {
+                        rowData.cells.push(row.cells[i].textContent.trim());
+                    } else {
+                        // 其他列优先使用完整数据，如果没有则使用显示的文本
+                        const fullText = row.cells[i].getAttribute('data-full-text');
+                        rowData.cells.push(fullText || row.cells[i].textContent.trim());
+                    }
                 }
                 
                 // 检查是否已生成任务
@@ -793,11 +931,18 @@
                     
                     // 填充数据
                     for (let i = 0; i < 9; i++) {
-                        cells[i].textContent = rowData.cells[i] || '';
-                        // 添加事件监听器
-                        addCellEventListeners(cells[i]);
-                        // 处理内容长度限制
-                        handleCellContent(cells[i]);
+                        const cellValue = rowData.cells[i] || '';
+                        
+                        // 对于场次名列（索引4），直接显示完整文本并设置title
+                        if (i === 4) {
+                            cells[i].textContent = cellValue;
+                            cells[i].setAttribute('title', cellValue);
+                        } else {
+                            // 其他列设置完整数据并截断显示
+                            cells[i].setAttribute('data-full-text', cellValue);
+                            const displayText = getByteLength(cellValue) > 80 ? truncateText(cellValue, 80) : cellValue;
+                            cells[i].textContent = displayText;
+                        }
                     }
                     
                     // 如果已生成任务，恢复状态
