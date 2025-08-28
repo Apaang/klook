@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="images/connect.svg" type="image/svg+xml">
+    <title>出行任务生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 95%;
+            max-width: 1800px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+            min-width: 120px;
+            max-height: 72px; /* 约3行文字的高度 */
+            max-width: 280px; /* 根据测试文本调整宽度 */
+            white-space: pre-line;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 12px;
+            word-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .input-column {
+            background-color: #e8f5e9;
+        }
+
+        /* 前四列特殊样式 */
+        .primary-column {
+            background-color: #fff3cd;
+            min-width: 72px; /* 60% of 120px */
+            width: 72px;
+        }
+
+        .primary-column th {
+            background-color: #ffeaa7;
+        }
+
+        .output-column {
+            background-color: #e3f2fd;
+        }
+
+        .action-column {
+            background-color: #fff3e0;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .task-btn {
+            background-color: #28a745;
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+
+        .task-btn:hover {
+            background-color: #218838;
+        }
+
+        .register-btn {
+            background-color: #ffc107;
+            color: #212529;
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+
+        .register-btn:hover {
+            background-color: #e0a800;
+        }
+
+        .order-input {
+            width: 100%;
+            border: 1px solid #ccc;
+            padding: 2px;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+
+        /* 渐隐提示样式 */
+        .toast-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .toast-error {
+            background-color: #dc3545;
+        }
+
+        .toast-success {
+            background-color: #28a745;
+        }
+
+        .toast-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .disabled-row {
+            background-color: #f8f9fa !important;
+        }
+
+        .disabled-row td[contenteditable] {
+            background-color: #e9ecef !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>出行任务生成器</h1>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th class="primary-column">资源ID</th>
+                    <th class="primary-column">出行场次</th>
+                    <th class="primary-column">出行日期</th>
+                    <th class="primary-column">出行人数</th>
+                    <th class="input-column">场次名</th>
+                    <th class="input-column">采购价格</th>
+                    <th class="input-column">任天堂时间</th>
+                    <th class="input-column">飞猪编码</th>
+                    <th class="input-column">预定链接</th>
+                    <th class="action-column">操作</th>
+                    <th class="output-column">采购订单号</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 初始空行 -->
+                <tr>
+                    <td contenteditable="true" class="primary-column"></td>
+                    <td contenteditable="true" class="primary-column"></td>
+                    <td contenteditable="true" class="primary-column"></td>
+                    <td contenteditable="true" class="primary-column"></td>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td contenteditable="true" class="input-column"></td>
+                    <td class="action-column"><button class="task-btn" onclick="generateTask(this)">任务生成</button></td>
+                    <td class="output-column"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 按钮容器 -->
+    <div class="button-container">
+        <button id="copyBtn">复制表格</button>
+        <button id="clearBtn">清空</button>
+        <button id="addRowBtn">添加行</button>
+    </div>
+
+    <script>
+        // 监听粘贴事件
+        document.getElementById('dataTable').addEventListener('paste', function(e) {
+            e.preventDefault();
+            const clipboardData = e.clipboardData || window.clipboardData;
+            const text = clipboardData.getData('text');
+            const rows = text.split('\n');
+            const table = e.target.closest('table');
+            let startRow = e.target.parentElement.rowIndex;
+            let startCol = e.target.cellIndex;
+
+            rows.forEach((rowText, rowIndex) => {
+                if (rowText.trim() === "") return;
+                const cells = rowText.split('\t');
+                let currentRow = table.rows[startRow + rowIndex];
+                if (!currentRow) {
+                    currentRow = addNewRow();
+                }
+                cells.forEach((cellText, cellIndex) => {
+                    if (startCol + cellIndex < 9) { // 只粘贴到输入列（包括预定链接）
+                        let currentCell = currentRow.cells[startCol + cellIndex];
+                        if (currentCell && currentCell.contentEditable === "true") {
+                            currentCell.textContent = cellText;
+                        }
+                    }
+                });
+            });
+        });
+
+        // 显示渐隐提示
+        function showToast(message, type = 'error') {
+            const toast = document.createElement('div');
+            toast.className = `toast-message toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 500);
+            }, 3000);
+        }
+
+        // 生成任务
+        function generateTask(button) {
+            const row = button.closest('tr');
+            const cells = row.cells;
+            
+            // 获取数据
+            const resourceId = cells[0].textContent.trim();
+            const session = cells[1].textContent.trim();
+            const travelDate = cells[2].textContent.trim();
+            const peopleCount = cells[3].textContent.trim();
+            const sessionName = cells[4].textContent.trim();
+            const price = cells[5].textContent.trim();
+            const nintendoTime = cells[6].textContent.trim();
+            const fliggyCode = cells[7].textContent.trim();
+            const bookingLink = cells[8].textContent.trim();
+
+            // 验证必填字段
+            if (!travelDate || !peopleCount || !price) {
+                showToast('请填写完整的出行日期、出行人数和采购价格！', 'error');
+                return;
+            }
+            
+            if (!nintendoTime && !sessionName) {
+                showToast('任天堂时间和场次名不能同时为空！', 'error');
+                return;
+            }
+
+            let taskText = '';
+            const totalPrice = parseFloat(price) * parseInt(peopleCount);
+
+            if (!nintendoTime || nintendoTime === '') {
+                // 任天堂时间为空
+                taskText = `左侧导航条 - VIP体验\n环球影城VIP体验\n${travelDate}\n${sessionName}\nVIP团队行程3小时\n\n${price}*${peopleCount}=${totalPrice}\n手机、邮箱和其他资料填自己的\n可以用花呗、信用卡`;
+            } else {
+                // 任天堂时间不为空
+                taskText = `快速7项（指定场次）\n矿车精选\n\n${travelDate}\n任天堂${nintendoTime}后入园\n\n${price}*${peopleCount}=${totalPrice}\n手机、邮箱和其他资料填自己的\n可以用花呗、信用卡`;
+            }
+
+            // 复制到剪贴板
+            navigator.clipboard.writeText(taskText).then(() => {
+                showToast('任务内容已复制到剪贴板！', 'success');
+                
+                // 将该行设为不可编辑
+                for (let i = 0; i < 9; i++) { // 包括预定链接列
+                    cells[i].contentEditable = "false";
+                    cells[i].classList.add('disabled-row');
+                }
+                
+                // 修改按钮文本和功能
+                const productName = (!nintendoTime || nintendoTime === '') ? '三小时VIP' : 'Minecart & Selection';
+                button.textContent = `【${productName}】已生成`;
+                button.onclick = function() { restoreEditableState(this); };
+                button.style.backgroundColor = '#6c757d';
+                
+                // 添加采购订单号输入框
+                const orderCell = cells[10];
+                const orderInput = document.createElement('input');
+                orderInput.type = 'text';
+                orderInput.className = 'order-input';
+                orderInput.placeholder = '输入采购订单号';
+                orderInput.addEventListener('paste', function(e) {
+                    e.stopPropagation(); // 阻止事件冒泡到表格的粘贴事件
+                    setTimeout(() => {
+                        this.value = this.value.trim().replace(/[\n\r]/g, '');
+                        // 输入内容后显示登记按钮
+                        if (this.value.trim()) {
+                            showRegisterButton(this);
+                        }
+                    }, 0);
+                });
+                orderInput.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        showRegisterButton(this);
+                    } else {
+                        hideRegisterButton(this);
+                    }
+                });
+                orderCell.innerHTML = '';
+                orderCell.appendChild(orderInput);
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showToast('复制失败，请手动复制内容', 'error');
+            });
+        }
+
+        // 登记采购表
+        function registerPurchase(button) {
+            const row = button.closest('tr');
+            const cells = row.cells;
+            
+            // 获取采购订单号（现在在第10列）
+            const orderInput = cells[10].querySelector('input');
+            const orderNumber = orderInput ? orderInput.value.trim().replace(/\n/g, '').replace(/\r/g, '') : '';
+            
+            if (!orderNumber) {
+                showToast('请先填写采购订单号！', 'warning');
+                return;
+            }
+            
+            // 获取其他数据
+            const travelDate = cells[2].textContent.trim();
+            const peopleCount = cells[3].textContent.trim();
+            const price = cells[5].textContent.trim();
+            const nintendoTime = cells[6].textContent.trim();
+            
+            const totalPrice = parseFloat(price) * parseInt(peopleCount);
+            const productName = (!nintendoTime || nintendoTime === '') ? '三小时VIP' : 'Minecart & Selection';
+            
+            // 生成登记内容（使用制表符分隔）
+            const registerText = `${orderNumber}\t${travelDate}\t${peopleCount}\t${totalPrice}\t¥15\t${price}\t飞猪\t胡勇\t胡勇\t${productName}`;
+            
+            // 复制到剪贴板
+            navigator.clipboard.writeText(registerText).then(() => {
+                showToast('登记内容已复制到剪贴板！可直接粘贴到Excel中', 'success');
+                button.textContent = '已登记';
+                button.disabled = true;
+                button.style.backgroundColor = '#6c757d';
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showToast('复制失败，请手动复制内容', 'error');
+            });
+        }
+
+        // 显示登记按钮
+        function showRegisterButton(input) {
+            const orderCell = input.parentElement;
+            let registerBtn = orderCell.querySelector('.register-btn');
+            if (!registerBtn) {
+                registerBtn = document.createElement('button');
+                registerBtn.className = 'register-btn';
+                registerBtn.textContent = '登记采购表';
+                registerBtn.onclick = function() { registerPurchase(this); };
+                registerBtn.style.marginTop = '5px';
+                registerBtn.style.display = 'block';
+                orderCell.appendChild(registerBtn);
+            }
+        }
+        
+        // 隐藏登记按钮
+        function hideRegisterButton(input) {
+            const orderCell = input.parentElement;
+            const registerBtn = orderCell.querySelector('.register-btn');
+            if (registerBtn) {
+                registerBtn.remove();
+            }
+        }
+
+        // 添加新行
+        function addNewRow() {
+            const table = document.getElementById('dataTable').tBodies[0];
+            const newRow = table.insertRow();
+            
+            // 添加输入列（包括预定链接）
+            for (let i = 0; i < 9; i++) {
+                const cell = newRow.insertCell();
+                cell.contentEditable = "true";
+                // 前四列使用primary-column，其余使用input-column
+                cell.className = i < 4 ? "primary-column" : "input-column";
+            }
+            
+            // 添加操作列
+            const actionCell = newRow.insertCell();
+            actionCell.className = "action-column";
+            actionCell.innerHTML = '<button class="task-btn" onclick="generateTask(this)">任务生成</button>';
+            
+            // 添加采购订单号列
+            const orderCell = newRow.insertCell();
+            orderCell.className = "output-column";
+            
+            return newRow;
+        }
+
+        // 复制表格按钮功能
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            let range = document.createRange();
+            range.selectNode(document.getElementById('dataTable'));
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+            showToast('表格内容已复制到剪贴板！', 'success');
+        });
+
+        // 恢复可编辑状态
+        function restoreEditableState(button) {
+            const row = button.closest('tr');
+            const cells = row.cells;
+            
+            // 恢复可编辑状态
+            for (let i = 0; i < 9; i++) {
+                cells[i].contentEditable = "true";
+                cells[i].classList.remove('disabled-row');
+            }
+            
+            // 恢复按钮原始状态
+            button.textContent = '任务生成';
+            button.onclick = function() { generateTask(this); };
+            button.style.backgroundColor = '#28a745';
+            
+            // 清空采购订单号
+            cells[10].innerHTML = '';
+        }
+
+        // handleOrderPaste函数已被移除，粘贴处理现在直接在input元素的事件监听器中处理
+
+        // 清空按钮功能
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            const table = document.getElementById('dataTable').tBodies[0];
+            while (table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+            const firstRow = table.rows[0];
+            for (let i = 0; i < 9; i++) { // 包括预定链接列
+                firstRow.cells[i].textContent = '';
+                firstRow.cells[i].contentEditable = "true";
+                firstRow.cells[i].classList.remove('disabled-row');
+            }
+            firstRow.cells[9].innerHTML = '<button class="task-btn" onclick="generateTask(this)">任务生成</button>';
+            firstRow.cells[10].innerHTML = '';
+        });
+
+        // 添加行按钮功能
+        document.getElementById('addRowBtn').addEventListener('click', function() {
+            addNewRow();
+        });
+    </script>
+</body>
+</html>
