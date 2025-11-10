@@ -312,7 +312,6 @@
     <script>
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
-            loadDataFromStorage();
             ensureEmptyRow();
             initializeCellTooltips();
         });
@@ -546,7 +545,7 @@
                 taskText = `左侧导航条 - VIP体验\n环球影城VIP体验\n${travelDate}\n${sessionName}\nVIP团队行程3小时\n\n${price}*${peopleCount}=${totalPrice}\n手机、邮箱和其他资料填自己的\n可以用花呗、信用卡`;
             } else {
                 // 任天堂时间不为空
-                taskText = `快速7项（指定场次）\n矿车精选\n\n${travelDate}\n任天堂${nintendoTime}后入园\n\n${price}*${peopleCount}=${totalPrice}\n手机、邮箱和其他资料填自己的\n可以用花呗、信用卡`;
+                taskText = `快速7项（指定场次）\n矿车小黄人\n\n${travelDate}\n任天堂${nintendoTime}后入园\n\n${price}*${peopleCount}=${totalPrice}\n手机、邮箱和其他资料填自己的\n可以用花呗、信用卡`;
             }
 
             // 复制到剪贴板
@@ -798,8 +797,7 @@
                 firstRow.cells[i].style.fontSize = '16px';
             }
             
-            // 清空本地存储
-            localStorage.removeItem('travelTaskData');
+            // 已移除本地缓存功能
         });
 
         // 添加行按钮功能
@@ -841,6 +839,7 @@
         
         // 保存数据到本地存储
         function saveDataToStorage() {
+            return;
             const table = document.getElementById('dataTable').tBodies[0];
             const rows = Array.from(table.rows);
             const data = [];
@@ -912,6 +911,7 @@
         
         // 从localStorage加载数据
         function loadDataFromStorage() {
+            return;
             const savedData = localStorage.getItem('travelTaskData');
             if (!savedData) return;
             
@@ -1048,13 +1048,9 @@
                 addCellEventListeners(cell);
             });
             
-            // 加载保存的数据
-            loadDataFromStorage();
-            
             // 确保至少有一个空行
             ensureEmptyRow();
         });
     </script>
 </body>
 </html>
-
