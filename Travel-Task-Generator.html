@@ -579,7 +579,7 @@
                 }, 100);
                 
                 // 修改按钮文本和功能
-                const productName = (!nintendoTime || nintendoTime === '') ? '三小时VIP' : 'Minecart & Selection';
+                const productName = (!nintendoTime || nintendoTime === '') ? '三小时VIP' : 'Minecart & Minion Mayhem';
                 button.textContent = `【${productName}】已生成`;
                 button.onclick = function() { restoreEditableState(this); };
                 button.style.backgroundColor = '#6c757d';
@@ -637,7 +637,7 @@
             const nintendoTime = cells[6].textContent.trim();
             
             const totalPrice = parseFloat(price) * parseInt(peopleCount);
-            const productName = (!nintendoTime || nintendoTime === '') ? '三小时VIP' : 'Minecart & Selection';
+            const productName = (!nintendoTime || nintendoTime === '') ? '三小时VIP' : 'Minecart & Minion Mayhem';
             
             // 生成登记内容（使用制表符分隔）
             const registerText = `${orderNumber}\t${travelDate}\t${peopleCount}\t${totalPrice}\t¥15\t${price}\t飞猪\t胡勇\t胡勇\t${productName}`;
@@ -966,7 +966,7 @@
                         }
                         
                         const nintendoTime = cells[6].textContent.trim();
-                        const productName = (!nintendoTime || nintendoTime === '') ? '三小时VIP' : 'Minecart & Selection';
+                        const productName = (!nintendoTime || nintendoTime === '') ? '三小时VIP' : 'Minecart & Minion Mayhem';
                         const taskBtn = cells[9].querySelector('button');
                         taskBtn.textContent = `【${productName}】已生成`;
                         taskBtn.onclick = function() { restoreEditableState(this); };
@@ -1054,3 +1054,4 @@
     </script>
 </body>
 </html>
+
