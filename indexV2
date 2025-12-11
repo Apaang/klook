@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>我的工作台</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+<style>
+    body {
+        font-family: 'Roboto', Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #E3F2FD 0%, #ffffff 100%);
+        background-size: cover;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+    }
+
+    /* --- 导航图标区域样式 (动态生成) --- */
+    .shortcut-icons-container {
+        width: 800px;
+        display: flex;
+        justify-content: center;
+        padding: 15px 0;
+        margin-top: 40px;
+        background-color: rgba(255,255,255,0.5);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        position: relative; /* 为编辑按钮定位 */
+    }
+    .shortcut-icons {
+        display: flex;
+        justify-content: flex-start; /* 改为左对齐，配合换行 */
+        flex-wrap: wrap;
+        gap: 30px; /* 间距 */
+        width: 100%;
+        padding: 0 40px;
+    }
+    .icon-wrapper {
+        position: relative;
+        text-align: center;
+        width: 100px; /* 固定宽度确保对齐 */
+    }
+    .icon-box {
+        width: 100px;
+        height: 100px;
+        background-color: #ffffff;
+        border-radius: 15px;
+        transition: all 0.3s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .icon-box:hover {
+        background-color: #E8F5FE;
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    /* 图片样式：支持 URL 图片或 Emoji 文字 */
+    .icon-box img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+    }
+    .icon-emoji {
+        font-size: 50px;
+    }
+    .icon-label {
+        font-size: 14px;
+        margin-top: 8px;
+        color: #333;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* --- 编辑模式样式 --- */
+    #editToggleBtn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: transparent;
+        border: 1px solid #ccc;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        color: #666;
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+    #editToggleBtn:hover { opacity: 1; }
+    
+    .delete-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ff4444;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 22px;
+        cursor: pointer;
+        font-weight: bold;
+        display: none; /* 默认隐藏 */
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    /* 编辑模式下显示删除按钮 */
+    .editing .delete-btn { display: block; }
+    .editing .icon-box { animation: shake 0.3s infinite; }
+    
+    /* 添加按钮 */
+    .add-btn-wrapper {
+        display: none; /* 默认隐藏 */
+        width: 100px;
+        text-align: center;
+    }
+    .editing .add-btn-wrapper { display: block; }
+    .add-icon-box {
+        border: 2px dashed #aaa;
+        background: rgba(255,255,255,0.3);
+    }
+
+    /* 简单的弹窗样式 */
+    .modal-overlay {
+        display: none;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .modal-content input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    /* --- 下方工具栏原有样式 (保持不变) --- */
+    .wrapper {
+        width: 60%; /*稍微调宽一点*/
+        text-align: center;
+        padding: 20px;
+        background-color: rgba(255,255,255,0.6);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        margin-top: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .search-container { margin-bottom: 20px; }
+    .search-box { position: relative; display: flex; justify-content: center; align-items: center; gap: 10px; }
+    
+    /* 输入框统一样式优化 */
+    input[type="text"] {
+        padding: 10px 15px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+    input[type="text"]:focus { border-color: #007bff; }
+
+    .input-container, .button-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+    
+    button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 15px;
+        transition: background-color 0.2s;
+    }
+    button:hover { background-color: #0056b3; }
+    
+    .xmd-button { background-color: #06C1AE; }
+    .xmd-button:hover { background-color: #036158; }
+
+    @keyframes shake {
+        0% { transform: rotate(0deg); }
+        25% { transform: rotate(1deg); }
+        50% { transform: rotate(0deg); }
+        75% { transform: rotate(-1deg); }
+        100% { transform: rotate(0deg); }
+    }
+</style>
+</head>
+<body>
+
+<div class="shortcut-icons-container" id="navContainer">
+    <button id="editToggleBtn" onclick="toggleEditMode()">编辑导航</button>
+    <div class="shortcut-icons" id="linksArea">
+        </div>
+</div>
+
+<div class="modal-overlay" id="addModal">
+    <div class="modal-content">
+        <h3>添加新导航</h3>
+        <input type="text" id="newTitle" placeholder="名称 (例如: Google)">
+        <input type="text" id="newUrl" placeholder="网址 (例如: https://...)">
+        <input type="text" id="newIcon" placeholder="图标URL 或 Emoji (例如: 🔍 或 images/xx.svg)">
+        <div class="modal-actions">
+            <button onclick="closeModal()" style="background:#aaa">取消</button>
+            <button onclick="saveNewLink()">保存</button>
+        </div>
+    </div>
+</div>
+
+<div class="wrapper" style="background-color: #E6EFFA;">
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="AMP商品搜索..." onkeypress="searchKeyPress(event)" style="width: 50%;">
+        <button onclick="search()" style="padding: 10px 15px;">🔍</button>
+    </div>
+
+    <div class="input-container" style="margin-top: 15px;">
+        <input type="text" id="aidInput" placeholder="AID" style="width: 100px;" oninput="validateAndMoveInput(this, ['pidInput', 'skuIdInput'])">
+        <input type="text" id="pidInput" placeholder="PID" style="width: 100px;" oninput="validateAndMoveInput(this, ['skuIdInput'])">
+        <input type="text" id="skuIdInput" placeholder="SKU ID" style="width: 100px;" oninput="validateInput(this)">
+    </div>
+
+    <div class="button-container">
+        <button onclick="gotoAMPPage()">AMP商品页</button>
+        <button onclick="gotoBookingPage()">预定页</button>
+        <button onclick="gotoPricePage()">价格页</button>
+    </div>
+</div>
+
+<div class="wrapper" style="background-color: #E0F9F7;">
+    <div class="search-box">
+        <input type="text" id="xmdInput" placeholder="输入新美大ID (自动格式化)" style="width: 60%;">    
+        <button class="xmd-button" id="copyButton">复制</button>
+    </div>
+    <div class="button-container" style="margin-top: 15px;">
+        <button class="xmd-button" onclick="gotoSearchPage()">商品搜索页</button>
+        <button class="xmd-button" onclick="gotoGoodsPage()">商品编辑页</button>
+        <button class="xmd-button" onclick="gotoOrderPage()">订单页</button>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 第一部分：导航栏的可视化编辑逻辑 (新增)
+    // ==========================================
+
+    // 默认数据（如果你第一次打开是空的，会加载这些）
+    const defaultLinks = [
+        { title: "SlackBot", url: "https://admin.klook.com/agent/api/slackbot", icon: "🤖" },
+        { title: "指令生成", url: "Generate SlackBot Command.html", icon: "🔗" },
+        { title: "库存查看", url: "https://admin.klook.com/storage/realtime/inventory/summary", icon: "📦" },
+        { title: "Admin订单", url: "https://admin.klook.com/order/search", icon: "📄" },
+        { title: "TTD列表", url: "https://admin.klook.com/act/activity/list", icon: "🎢" },
+        { title: "美团商品", url: "https://eo.dianping.com/epassport/goodmanage/spulist", icon: "🛍️" },
+        { title: "美团订单", url: "https://eo.dianping.com/epassport/ordermanage/orderlist", icon: "🧾" },
+        { title: "美团表格", url: "https://docs.google.com/spreadsheets/d/10CTOQDjBWqU8XA2LyJBGP7N9UBPpmHquWEJy6W7KzWM/edit#gid=287743000", icon: "📊" }
+    ];
+
+    let links = [];
+    let isEditing = false;
+
+    // 初始化：读取 LocalStorage
+    function initLinks() {
+        const stored = localStorage.getItem('my-nav-links');
+        if (stored) {
+            links = JSON.parse(stored);
+        } else {
+            links = defaultLinks;
+        }
+        renderLinks();
+    }
+
+    // 渲染图标
+    function renderLinks() {
+        const container = document.getElementById('linksArea');
+        container.innerHTML = '';
+
+        links.forEach((link, index) => {
+            // 判断图标是图片路径还是emoji
+            let iconHtml = '';
+            if (link.icon.includes('/') || link.icon.includes('.')) {
+                // 认为是图片路径
+                iconHtml = `<img src="${link.icon}" alt="${link.title}" onerror="this.style.display='none';this.parentNode.innerHTML='🌐'">`;
+            } else {
+                // 认为是Emoji
+                iconHtml = `<span class="icon-emoji">${link.icon}</span>`;
+            }
+
+            const html = `
+                <div class="icon-wrapper">
+                    <div class="delete-btn" onclick="deleteLink(${index})">×</div>
+                    <a href="${link.url}" class="icon-box" target="_self" onclick="return !isEditing">
+                        ${iconHtml}
+                    </a>
+                    <div class="icon-label">${link.title}</div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+
+        // 添加“加号”按钮
+        const addBtnHtml = `
+            <div class="add-btn-wrapper icon-wrapper">
+                <div class="icon-box add-icon-box" onclick="openModal()">
+                    <span class="icon-emoji" style="color:#aaa">➕</span>
+                </div>
+                <div class="icon-label" style="color:#aaa">添加</div>
+            </div>
+        `;
+        container.innerHTML += addBtnHtml;
+    }
+
+    // 切换编辑模式
+    function toggleEditMode() {
+        isEditing = !isEditing;
+        const container = document.getElementById('navContainer');
+        const btn = document.getElementById('editToggleBtn');
+        
+        if (isEditing) {
+            container.classList.add('editing');
+            btn.innerText = "完成保存";
+            btn.style.background = "#4CAF50";
+            btn.style.color = "white";
+        } else {
+            container.classList.remove('editing');
+            btn.innerText = "编辑导航";
+            btn.style.background = "transparent";
+            btn.style.color = "#666";
+        }
+    }
+
+    // 删除
+    function deleteLink(index) {
+        if(confirm("确定删除这个快捷方式吗？")) {
+            links.splice(index, 1);
+            saveData();
+            renderLinks();
+        }
+    }
+
+    // 保存到 LocalStorage
+    function saveData() {
+        localStorage.setItem('my-nav-links', JSON.stringify(links));
+    }
+
+    // --- 弹窗相关 ---
+    function openModal() {
+        document.getElementById('addModal').style.display = 'flex';
+        document.getElementById('newTitle').focus();
+    }
+    function closeModal() {
+        document.getElementById('addModal').style.display = 'none';
+        // 清空输入
+        document.getElementById('newTitle').value = '';
+        document.getElementById('newUrl').value = '';
+        document.getElementById('newIcon').value = '';
+    }
+    function saveNewLink() {
+        const title = document.getElementById('newTitle').value;
+        const url = document.getElementById('newUrl').value;
+        const icon = document.getElementById('newIcon').value || '🔗'; // 默认图标
+
+        if(title && url) {
+            links.push({ title, url, icon });
+            saveData();
+            renderLinks();
+            closeModal();
+        } else {
+            alert("名称和网址必填哦");
+        }
+    }
+
+    // 页面加载时运行初始化
+    initLinks();
+
+
+    // ==========================================
+    // 第二部分：你原有的业务逻辑脚本 (保持原样)
+    // ==========================================
+    
+    function search() {
+        var keyword = document.getElementById("searchInput").value;
+        if(keyword) window.location.href = `https://klook.klktech.cn/zh-CN/search?keyword=${encodeURIComponent(keyword)}`;
+    }
+    
+    function searchKeyPress(event) {
+        if (event.key === "Enter") search();
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        var xmdInput = document.getElementById("xmdInput");
+        if(xmdInput){
+            xmdInput.addEventListener('blur', function() { splitXmdId(); });
+            xmdInput.addEventListener('keydown', function(event) {
+                if (event.key === "Enter" || event.keyCode === 13) {
+                    event.preventDefault();
+                    splitXmdId();
+                }
+            });
+        }
+
+        var copyButton = document.getElementById("copyButton");
+        if(copyButton) {
+            copyButton.addEventListener('click', function() {
+                var xmdInputText = document.getElementById("xmdInput").value;
+                navigator.clipboard.writeText(xmdInputText).then(function() {
+                    showAlert("复制成功")
+                }).catch(function(error) {
+                    showAlert("复制失败，请手动复制")
+                });
+            });
+        }
+    });
+
+    function validateAndMoveInput(input, nextInputIds) {
+        let parts = input.value.split(/[^0-9]+/);
+        input.value = parts[0];
+        parts.slice(1).forEach((part, index) => {
+            if (index < nextInputIds.length) {
+                let nextInput = document.getElementById(nextInputIds[index]);
+                nextInput.value = part;
+            }
+        });
+        input.addEventListener('keydown', function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                // 简单查找下一个按钮
+                let btns = document.querySelectorAll('.button-container button');
+                if(btns.length > 0) btns[0].focus();
+            }
+        });
+    }
+
+    function validateInput(input) {
+        input.value = input.value.replace(/\D/g, '');
+        input.addEventListener('keydown', function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                let btns = document.querySelectorAll('.button-container button');
+                if(btns.length > 0) btns[0].focus();
+            }
+        });
+    }
+    
+    // 按钮方向键逻辑
+    document.querySelectorAll('.button-container button').forEach((button, index, buttons) => {
+        button.addEventListener('keydown', function(e) {
+            if (e.key === "ArrowRight") {
+                e.preventDefault();
+                buttons[(index + 1) % buttons.length].focus();
+            } else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                buttons[(index - 1 + buttons.length) % buttons.length].focus();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                button.click();
+            }
+        });
+    });
+    
+    function gotoAMPPage() {
+        var aid = document.getElementById("aidInput").value;
+        if (aid) {
+            window.location.href = `https://klook.klktech.cn/zh-CN/activity/${aid}`;
+        } else {
+            alert("请输入AID");
+        }
+    }
+    
+    function gotoBookingPage() {
+        var pid = document.getElementById("pidInput").value;
+        var skuId = document.getElementById("skuIdInput").value;
+        if (pid && skuId) {
+            window.location.href = `https://klook.klktech.cn/zh-CN/pay_ticket/${pid}/${skuId}`;
+        } else {
+            alert("请输入PID和SKU ID");
+        }
+    }
+    
+    function gotoPricePage() {
+        var aid = document.getElementById("aidInput").value;
+        var pid = document.getElementById("pidInput").value;
+        if (aid && !pid) {
+            window.location.href = `https://admin.klook.com/act/activity/basic/${aid}?edit_status=1&is_am=true&ref=&lang=zh_CN`;
+        } else if (aid && pid) {
+            window.location.href = `https://admin.klook.com/mspa/experiencesadmincommon/act/package/schedule/${aid}?iframe=true&edit_status=1&ref=&lang=zh_CN&page_from=admin&package_type=-1&package_id=${pid}`;
+        } else {
+            alert("请至少输入AID");
+        }
+    }
+
+    function splitXmdId() {
+        var xmdInput = document.getElementById("xmdInput").value.trim();
+        var formatted = xmdInput.replace(/[^0-9]+/g, ',').replace(/,+/g, ',').trim(',');
+        document.getElementById("xmdInput").value = formatted;
+    }
+
+    function gotoSearchPage() {
+        var xmdId = document.getElementById("xmdInput").value;
+        if (!/^\d+(,\d+)*$/.test(xmdId)) {
+            showAlert("输入错误，请重新输入");
+        } else {
+            var idsArray = xmdId.split(',').map(id => '"' + id + '"');
+            var url = `https://eo.dianping.com/epassport/goodmanage/spulist?tab=book&spuIds=[${idsArray.join(',')}]`;
+            window.location.href = url;
+        }
+    }
+
+    function gotoGoodsPage() {
+        var xmdId = document.getElementById("xmdInput").value.trim();
+        if (!xmdId || !/^\d+(,\d+)*$/.test(xmdId)) {
+            showAlert("输入框空白，跳转到List页");
+            window.location.href = "https://eo.dianping.com/epassport/goodmanage/spulist";
+        } else {
+            var ids = xmdId.split(',');
+            if (ids.length > 0) {
+                window.location.href = `https://eo.dianping.com/epassport/goodmanage/spudetail?categoryid=1008&spuid=${ids[0]}`;
+                for (var i = 1; i < ids.length; i++) {
+                    window.open(`https://eo.dianping.com/epassport/goodmanage/spudetail?categoryid=1008&spuid=${ids[i]}`, '_blank');
+                }
+            }
+        }
+    }
+
+    function gotoOrderPage() {
+        var xmdId = document.getElementById("xmdInput").value;
+        if (!xmdId || /\D/.test(xmdId)) {
+            showAlert("内容非法，跳转到List页");
+            window.location.href = "https://eo.dianping.com/epassport/ordermanage/orderlist";
+        } else {
+            window.location.href = `https://eo.dianping.com/epassport/ordermanage/orderdetail?orderid=${xmdId}`;
+        }
+    }
+
+    function showAlert(message) {
+        var alertBox = document.createElement("div");
+        alertBox.innerText = message;
+        alertBox.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);color:white;padding:20px;border-radius:10px;z-index:1000;";
+        document.body.appendChild(alertBox);
+        setTimeout(function() {
+            if(alertBox.parentNode) document.body.removeChild(alertBox);
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>
